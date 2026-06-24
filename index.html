@@ -1,0 +1,1228 @@
+<!doctype html>
+<html lang="ko" class="h-full w-full">
+ <head>
+  <script>window["__codeletBootstrap__"]=JSON.parse('{"A":"A","B":"20260624-03-b2656cb"}');</script>
+  <script src="/_sdk/558340785a07a8b2.telemetry_sdk.js" integrity="sha512-w6huTWybcELc18WJb0w+HZlX471QfzMUh7gbslB6onKoaFEogFDmOPMV5FcEo5/Ws8CyGWJgk7MOklfxKnVegA=="></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pixel Matrix Restore</title>
+  <script src="/_sdk/f87d0a976ef49e3b.element_sdk.js" integrity="sha512-rv/pMGLwgeKXDjlcSZ1AMgUtAX6QUpHCww30g9xHCLHzy+fZQs7/Pmn+Fn/rac3ihqVRhbBs6IGPJBVaqrUnPA=="></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbit&family=IBM+Plex+Sans+KR:wght@400;500;600;700;800&display=swap');
+
+    html, body { height: 100%; width: 100%; margin: 0; overflow: hidden; }
+    body { font-family: 'IBM Plex Sans KR', sans-serif; }
+
+    .app-shell {
+      width: 100%; height: 100%; overflow: auto;
+      background:
+        radial-gradient(circle at 12% 18%, rgba(0, 240, 255, 0.16), transparent 26%),
+        radial-gradient(circle at 84% 20%, rgba(57, 255, 136, 0.14), transparent 28%),
+        linear-gradient(135deg, #061014 0%, #0b1118 46%, #020507 100%);
+      color: #d9fff6; position: relative;
+    }
+
+    .app-shell::before {
+      content: ""; position: fixed; inset: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(0, 240, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 240, 255, 0.04) 1px, transparent 1px);
+      background-size: 38px 38px;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,.8), rgba(0,0,0,.15));
+    }
+
+    .scanline {
+      position: fixed; inset: 0; pointer-events: none;
+      background: linear-gradient(to bottom, transparent, rgba(57,255,136,.08), transparent);
+      height: 18%; animation: scan 5.5s linear infinite; opacity: .5;
+    }
+
+    @keyframes scan {
+      0% { transform: translateY(-100%); }
+      100% { transform: translateY(620%); }
+    }
+
+    .tech-font { font-family: 'Orbit', 'IBM Plex Sans KR', sans-serif; letter-spacing: -0.02em; }
+
+    .glass {
+      background: rgba(7, 20, 27, 0.72); border: 1px solid rgba(0, 240, 255, 0.22);
+      box-shadow: 0 0 28px rgba(0, 240, 255, 0.08), inset 0 1px 0 rgba(255,255,255,.06);
+      backdrop-filter: blur(14px);
+    }
+
+    .neon-panel {
+      background: linear-gradient(180deg, rgba(8, 24, 31, .88), rgba(5, 12, 18, .88));
+      border: 1px solid rgba(57, 255, 136, .26); box-shadow: 0 0 28px rgba(57, 255, 136, .08);
+    }
+
+    .matrix-wrap { position: relative; padding: 22px 26px; }
+    .matrix-wrap::before, .matrix-wrap::after {
+      content: ""; position: absolute; top: 12px; bottom: 12px; width: 18px;
+      border-color: #39ff88; opacity: .92; filter: drop-shadow(0 0 6px rgba(57,255,136,.65));
+    }
+    .matrix-wrap::before { left: 4px; border-left: 3px solid; border-top: 3px solid; border-bottom: 3px solid; }
+    .matrix-wrap::after { right: 4px; border-right: 3px solid; border-top: 3px solid; border-bottom: 3px solid; }
+
+    .matrix-row { display: flex; gap: 8px; justify-content: center; margin: 4px 0; }
+    
+    @keyframes matrixAppear {
+      0% { opacity: 0; transform: translateY(-10px) scale(0.5); color: #fff; text-shadow: 0 0 10px #fff; }
+      100% { opacity: 1; transform: translateY(0) scale(1); color: #d9fff6; text-shadow: none; }
+    }
+    .matrix-cell-anim { opacity: 0; animation: matrixAppear 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+    .matrix-cell { font-size: 18px; font-weight: 800; width: 20px; text-align: center; }
+
+    .pixel-grid { display: grid; gap: 6px; margin: 0 auto; width: max-content; }
+    .pixel-grid.grid-5 { grid-template-columns: repeat(5, 40px); }
+    .pixel-grid.grid-8 { grid-template-columns: repeat(8, 30px); }
+
+    .pixel-cell {
+      aspect-ratio: 1 / 1; border-radius: 8px; border: 1px solid rgba(0, 240, 255, .28);
+      background: #020507; cursor: pointer;
+      transition: transform .1s ease, background .1s ease, box-shadow .1s ease, border-color .1s ease;
+      position: relative; overflow: hidden;
+    }
+
+    .pixel-cell:hover, .color-choice:hover, .btn-primary:hover {
+      transform: translateY(-3px) scale(1.02); border-color: rgba(57,255,136,.86);
+      box-shadow: 0 0 20px rgba(57,255,136,.3);
+    }
+    .pixel-cell:active { transform: scale(0.9); }
+
+    @keyframes correctPop {
+      0% { transform: scale(0.9); }
+      50% { transform: scale(1.15); box-shadow: 0 0 30px #39ff88, inset 0 0 20px rgba(0,240,255,.5); }
+      100% { transform: scale(1); }
+    }
+    .pixel-cell.active {
+      background: #ecfff8; box-shadow: 0 0 20px rgba(236,255,248,.42), inset 0 0 18px rgba(0,240,255,.2);
+      border-color: #39ff88; animation: correctPop 0.3s ease-out forwards;
+    }
+
+    .pixel-cell.wrong { animation: glitch .28s ease; border-color: #ff4d6d; background: rgba(255,77,109,.15); box-shadow: 0 0 15px rgba(255,77,109,.4); }
+
+    @keyframes glitch {
+      0%,100% { transform: translateX(0); }
+      25% { transform: translateX(-6px) rotate(-2deg); }
+      50% { transform: translateX(6px) rotate(2deg); }
+      75% { transform: translateX(-3px) rotate(-1deg); }
+    }
+
+    .meter { height: 12px; background: rgba(217,255,246,.1); border-radius: 99px; overflow: hidden; border: 1px solid rgba(0,240,255,.18); }
+    .meter-fill {
+      height: 100%; width: 0%; background: linear-gradient(90deg, #00f0ff, #39ff88);
+      border-radius: 99px; box-shadow: 0 0 15px rgba(57,255,136,.65); transition: width .35s ease;
+    }
+    .time-fill {
+      height: 100%; width: 100%; background: linear-gradient(90deg, #39ff88, #00f0ff);
+      border-radius: 99px; transition: width .3s linear;
+    }
+
+    @keyframes dangerPulse { 0%, 100% { box-shadow: 0 0 10px #ff4d6d; } 50% { box-shadow: 0 0 25px #ff4d6d; } }
+    @keyframes textDangerPulse { 0%, 100% { color: #ff4d6d; text-shadow: 0 0 10px #ff4d6d; transform: scale(1); } 50% { color: #fff; text-shadow: 0 0 20px #ff4d6d; transform: scale(1.1); } }
+    
+    .time-danger { animation: dangerPulse 0.5s infinite; background: linear-gradient(90deg, #ff4d6d, #ff8fa3) !important; }
+    .text-danger { animation: textDangerPulse 0.5s infinite; font-weight: 900; }
+
+    .start-screen, .play-screen { min-height: 100%; position: relative; z-index: 1; }
+    .start-screen { display: flex; align-items: center; justify-content: center; padding: 28px; }
+    .play-screen { display: none; flex-direction: column; animation: fadeIn 0.4s ease-out; }
+
+    .hud {
+      position: sticky; top: 0; z-index: 10; background: rgba(2, 5, 7, .82);
+      border-bottom: 1px solid rgba(0,240,255,.18); backdrop-filter: blur(16px);
+    }
+
+    .rgb-art {
+      display: grid; grid-template-columns: repeat(5, minmax(38px, 1fr)); gap: 0;
+      max-width: 340px; margin: 0 auto; padding: 0; border-radius: 0;
+      background: rgba(255,255,255,.04); border: 3px solid rgba(0,240,255,.2);
+    }
+
+    .rgb-pixel { aspect-ratio: 1 / 1; border-radius: 10px; border: 1px solid rgba(255,255,255,.12); box-shadow: inset 0 1px 0 rgba(255,255,255,.12); }
+    .target-pixel { outline: 3px solid #39ff88; outline-offset: 3px; animation: pulse 1.2s ease-in-out infinite; }
+
+    @keyframes pulse { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.5); } }
+    @keyframes rainbow { 0% { background-color: #ff0000; } 16.67% { background-color: #ff7f00; } 33.33% { background-color: #ffff00; } 50% { background-color: #00ff00; } 66.67% { background-color: #0000ff; } 83.33% { background-color: #4b0082; } 100% { background-color: #ff0000; } }
+    @keyframes grayscale-sweep { 0% { background-color: #000000; } 50% { background-color: #ffffff; } 100% { background-color: #000000; } }
+
+    .rgb-pixel.target-pixel.rainbow { outline: 3px solid #39ff88 !important; outline-offset: 3px !important; animation: rainbow 2s linear infinite, pulse 1.2s ease-in-out infinite !important; }
+    .rgb-pixel.target-pixel.grayscale-anim { outline: 3px solid #39ff88 !important; outline-offset: 3px !important; animation: grayscale-sweep 2.5s ease-in-out infinite, pulse 1.2s ease-in-out infinite !important; }
+
+    .color-choice {
+      border-radius: 18px; padding: 14px; border: 1px solid rgba(0,240,255,.2);
+      background: rgba(255,255,255,.04); cursor: pointer;
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; text-align: left;
+    }
+    .swatch { height: 54px; border-radius: 14px; border: 1px solid rgba(255,255,255,.18); margin-bottom: 10px; }
+    .slider-track input { width: 100%; accent-color: #39ff88; transition: all 0.2s ease; }
+    .slider-track input:active { accent-color: #00f0ff; }
+
+    .modal-backdrop {
+      position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+      padding: 24px; background: rgba(0,0,0,.65); backdrop-filter: blur(12px); z-index: 50;
+    }
+    .modal-backdrop.open { display: flex; animation: fadeIn .28s ease both; }
+
+    .report-modal {
+      width: min(760px, 100%); max-height: 92%; overflow: auto; border-radius: 32px;
+      border: 1px solid rgba(57,255,136,.72); background: linear-gradient(145deg, rgba(8,28,32,.9), rgba(2,8,12,.92));
+      box-shadow: 0 0 60px rgba(57,255,136,.25), inset 0 1px 0 rgba(255,255,255,.08);
+      padding: 28px; animation: popIn .4s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+    }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes popIn { from { opacity: 0; transform: scale(.9) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+
+    .toast {
+      position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(20px); opacity: 0;
+      pointer-events: none; z-index: 60; background: rgba(5, 16, 21, .95); border: 1px solid rgba(0,240,255,.5);
+      color: #d9fff6; padding: 14px 22px; border-radius: 999px; box-shadow: 0 0 30px rgba(0,240,255,.2);
+      transition: .25s cubic-bezier(0.2, 0.8, 0.2, 1); font-weight: 700; font-size: 1.05rem;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .btn-primary { 
+      background: linear-gradient(135deg, #00f0ff, #39ff88); color: #020507; border: 0; 
+      box-shadow: 0 0 28px rgba(57,255,136,.25); transition: all 0.2s ease;
+    }
+    .btn-primary:active { transform: scale(0.95); box-shadow: 0 0 10px rgba(57,255,136,.4); }
+    
+    button:focus-visible, input:focus-visible { outline: 3px solid #39ff88; outline-offset: 3px; }
+
+    @keyframes scorePop {
+      0% { transform: scale(1); color: #39ff88; }
+      50% { transform: scale(1.3); color: #ffffff; text-shadow: 0 0 25px #39ff88; }
+      100% { transform: scale(1); color: #39ff88; }
+    }
+    .score-animate { animation: scorePop 0.5s ease-out; }
+
+    @media (max-width: 900px) {
+      html, body { overflow: auto; }
+      .play-screen { min-height: 100%; }
+      .game-grid { grid-template-columns: 1fr !important; }
+      .pixel-grid { max-width: 340px; }
+    }
+  </style>
+ </head>
+ <body class="h-full w-full">
+  <div id="app" class="app-shell">
+   <div class="scanline"></div>
+   
+   <section id="startScreen" class="start-screen">
+    <div class="glass rounded-[36px] max-w-5xl w-full p-8 md:p-12 text-center">
+     <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-cyan-300/30 bg-cyan-300/10 text-cyan-100 font-bold mb-6">
+      <i data-lucide="cpu" class="w-5 h-5"></i> AI IMAGE SECURITY LAB
+     </div>
+     <h1 id="gameTitle" class="tech-font text-4xl md:text-6xl font-black text-white leading-tight tracking-tight">픽셀 매트릭스 리스토어</h1>
+     <p id="gameSubtitle" class="mt-3 text-xl md:text-2xl font-extrabold text-[#39ff88]">Pixel Matrix Restore - AI 이미지 복원 작전</p>
+     <p id="missionText" class="mt-6 max-w-3xl mx-auto text-cyan-50/85 leading-relaxed">해커의 공격으로 손상된 디지털 이미지를 행렬 데이터로 분석하고, 제한 시간 안에 픽셀 격자를 완벽하게 복원하세요.</p>
+     
+     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-8 text-left">
+      <div class="neon-panel rounded-3xl p-5">
+       <div class="text-[#00f0ff] font-black mb-2">STAGE 01</div>
+       <h2 class="text-base font-extrabold text-white">이진 행렬 (타임어택)</h2>
+       <p class="text-sm text-cyan-50/70 mt-2">빠르게 0과 1의 구조를 파악해 픽셀을 켭니다.</p>
+      </div>
+      <div class="neon-panel rounded-3xl p-5">
+       <div class="text-[#39ff88] font-black mb-2">STAGE 02</div>
+       <h2 class="text-base font-extrabold text-white">그레이스케일</h2>
+       <p class="text-sm text-cyan-50/70 mt-2">0~255 단일 채널로 명암을 복원합니다.</p>
+      </div>
+      <div class="neon-panel rounded-3xl p-5">
+       <div class="text-blue-400 font-black mb-2">STAGE 03</div>
+       <h2 class="text-base font-extrabold text-white">다중 채널 (RGB)</h2>
+       <p class="text-sm text-cyan-50/70 mt-2">[R, G, B] 데이터를 바탕으로 컬러를 섞습니다.</p>
+      </div>
+      <div class="neon-panel rounded-3xl p-5 border-yellow-200/30">
+       <div class="text-[#ff4d6d] font-black mb-2">STAGE 04</div>
+       <h2 class="text-base font-extrabold text-white">역방향 해독</h2>
+       <p class="text-sm text-cyan-50/70 mt-2">색을 보고 데이터를 유추합니다. (Up/Down 피드백)</p>
+      </div>
+     </div>
+     <button id="startButton" class="btn-primary mt-9 px-10 py-5 rounded-2xl font-black text-xl inline-flex items-center justify-center gap-3"> 
+       <i data-lucide="zap" class="w-6 h-6"></i> 작전 시작 및 랭킹 도전 
+     </button>
+    </div>
+   </section>
+
+   <section id="playScreen" class="play-screen">
+    <header class="hud px-4 md:px-8 py-4">
+     <div class="max-w-7xl mx-auto grid md:grid-cols-[1.1fr_1fr_1fr_.7fr] gap-4 items-center">
+      <div>
+       <div class="text-xs text-cyan-100/60 font-bold">CURRENT MISSION</div>
+       <h2 id="stageTitle" class="tech-font text-xl md:text-2xl font-black text-white">Stage 1 · 흑백 이미지 복원</h2>
+      </div>
+      <div>
+       <div class="flex justify-between text-xs font-bold mb-1">
+        <span>복원율</span> <span id="restorePercent">0%</span>
+       </div>
+       <div class="meter"><div id="restoreFill" class="meter-fill"></div></div>
+      </div>
+      <div>
+       <div class="flex justify-between text-xs font-bold mb-1">
+        <span>제한 시간</span> <span id="timeText" class="transition-colors duration-200">60초</span>
+       </div>
+       <div class="meter"><div id="timeFill" class="time-fill"></div></div>
+      </div>
+      <div class="text-right">
+       <div class="text-xs text-cyan-100/60 font-bold">TOTAL SCORE</div>
+       <div id="scoreDisplay" class="text-2xl tech-font font-black text-[#39ff88]">0</div>
+      </div>
+     </div>
+    </header>
+
+    <main class="flex-1 px-4 md:px-8 py-6">
+     <div class="max-w-7xl mx-auto">
+      <div class="glass rounded-[30px] p-5 md:p-7 mb-5">
+       <p id="instructionText" class="text-cyan-50/85 font-semibold">좌측 행렬에서 값이 1인 위치를 찾아 우측 격자의 같은 위치를 클릭하세요. 0은 검은색, 1은 흰색 픽셀입니다.</p>
+      </div>
+      
+      <div id="stageOne" class="game-grid grid grid-cols-1 md:grid-cols-2 gap-6">
+       <section class="neon-panel rounded-[30px] p-5 md:p-7">
+        <div class="flex items-center justify-between mb-5">
+         <h2 class="tech-font text-2xl font-black text-white">Matrix Viewer</h2>
+         <span id="matrixSizeLabel" class="text-xs px-3 py-1 rounded-full bg-cyan-300/10 text-cyan-100 border border-cyan-300/20 shadow-[0_0_10px_rgba(0,240,255,0.2)]">5 × 5</span>
+        </div>
+        <div id="matrixViewer" class="matrix-wrap overflow-x-auto"></div>
+       </section>
+       <section class="neon-panel rounded-[30px] p-5 md:p-7">
+        <div class="flex items-center justify-between mb-5">
+         <h2 class="tech-font text-2xl font-black text-white">Pixel Grid</h2>
+         <span class="text-xs px-3 py-1 rounded-full bg-green-300/10 text-green-100 border border-green-300/20 shadow-[0_0_10px_rgba(57,255,136,0.2)]">클릭 복원</span>
+        </div>
+        <div id="pixelGrid" class="pixel-grid" role="group"></div>
+       </section>
+      </div>
+
+      <div id="stageTwo" class="game-grid grid grid-cols-1 md:grid-cols-2 gap-6 hidden">
+       <section class="neon-panel rounded-[30px] p-5 md:p-7">
+        <div class="flex items-center justify-between mb-5">
+         <h2 class="tech-font text-2xl font-black text-white">Grayscale Channel</h2>
+         <span class="text-xs px-3 py-1 rounded-full bg-cyan-300/10 text-cyan-100 border border-cyan-300/20">단일 채널 (0~255)</span>
+        </div>
+        <div id="grayArt" class="rgb-art"></div>
+        <div class="mt-5 p-4 rounded-2xl bg-black/25 border border-cyan-300/15">
+         <p class="text-sm text-cyan-50/70">지정 픽셀의 밝기(명도) 값</p>
+         <p id="grayTargetValue" class="tech-font text-4xl font-black text-[#39ff88] mt-1 drop-shadow-[0_0_8px_rgba(57,255,136,0.4)]">[192]</p>
+        </div>
+       </section>
+       <section class="neon-panel rounded-[30px] p-5 md:p-7">
+        <div class="flex items-center justify-between mb-5">
+         <h2 class="tech-font text-2xl font-black text-white">Gray Restorer</h2>
+         <span class="text-xs px-3 py-1 rounded-full bg-green-300/10 text-green-100 border border-green-300/20">밝기 선택</span>
+        </div>
+        <div id="grayChoices" class="grid grid-cols-2 gap-4 mb-5"></div>
+        <div class="p-4 rounded-2xl bg-black/25 border border-cyan-300/15">
+         <p class="text-sm font-bold text-cyan-50/80 mb-3">슬라이더로 명도를 맞춰볼 수도 있습니다.</p>
+         <div class="slider-track">
+          <label for="graySlider" class="block text-sm font-bold text-gray-300 mb-1">Brightness (Gray): <span id="grayValue">0</span></label> 
+          <input id="graySlider" type="range" min="0" max="255" value="0">
+         </div>
+         <div class="mt-4 flex items-center gap-4">
+          <div id="graySliderPreview" class="w-16 h-16 rounded-2xl border border-white/20 bg-black shadow-inner"></div>
+          <button id="checkGrayButton" class="btn-primary px-5 py-3 rounded-2xl font-black">명도 확인</button>
+         </div>
+        </div>
+       </section>
+      </div>
+
+      <div id="stageThree" class="game-grid grid grid-cols-1 md:grid-cols-2 gap-6 hidden">
+       <section class="neon-panel rounded-[30px] p-5 md:p-7">
+        <div class="flex items-center justify-between mb-5">
+         <h2 class="tech-font text-2xl font-black text-white">Color Pixel Art</h2>
+         <span class="text-xs px-3 py-1 rounded-full bg-cyan-300/10 text-cyan-100 border border-cyan-300/20">다중 채널 (RGB)</span>
+        </div>
+        <div id="rgbArt" class="rgb-art"></div>
+        <div class="mt-5 p-4 rounded-2xl bg-black/25 border border-cyan-300/15">
+         <p class="text-sm text-cyan-50/70">시스템 지정 픽셀의 행렬 값</p>
+         <p id="rgbTargetValue" class="tech-font text-4xl font-black text-[#39ff88] mt-1 drop-shadow-[0_0_8px_rgba(57,255,136,0.4)]">[255, 0, 0]</p>
+        </div>
+       </section>
+       <section class="neon-panel rounded-[30px] p-5 md:p-7">
+        <div class="flex items-center justify-between mb-5">
+         <h2 class="tech-font text-2xl font-black text-white">RGB Restorer</h2>
+         <span class="text-xs px-3 py-1 rounded-full bg-green-300/10 text-green-100 border border-green-300/20">색상 조합</span>
+        </div>
+        <div id="colorChoices" class="grid grid-cols-2 gap-4 mb-5"></div>
+        <div class="p-4 rounded-2xl bg-black/25 border border-cyan-300/15">
+         <p class="text-sm font-bold text-cyan-50/80 mb-3">슬라이더로 RGB를 섞어보세요.</p>
+         <div class="slider-track mb-3">
+          <label for="redSlider" class="block text-sm font-bold text-red-200 mb-1">Red: <span id="redValue">0</span></label> 
+          <input id="redSlider" type="range" min="0" max="255" value="0">
+         </div>
+         <div class="slider-track mb-3">
+          <label for="greenSlider" class="block text-sm font-bold text-green-200 mb-1">Green: <span id="greenValue">0</span></label> 
+          <input id="greenSlider" type="range" min="0" max="255" value="0">
+         </div>
+         <div class="slider-track">
+          <label for="blueSlider" class="block text-sm font-bold text-blue-200 mb-1">Blue: <span id="blueValue">0</span></label> 
+          <input id="blueSlider" type="range" min="0" max="255" value="0">
+         </div>
+         <div class="mt-4 flex items-center gap-4">
+          <div id="sliderPreview" class="w-16 h-16 rounded-2xl border border-white/20 bg-black shadow-inner"></div>
+          <button id="checkSliderButton" class="btn-primary px-5 py-3 rounded-2xl font-black flex-1">조합 확인</button>
+         </div>
+        </div>
+       </section>
+      </div>
+
+      <div id="stageFour" class="game-grid grid grid-cols-1 md:grid-cols-2 gap-6 hidden">
+       <section class="neon-panel rounded-[30px] p-5 md:p-7">
+        <div class="flex items-center justify-between mb-5">
+         <h2 class="tech-font text-2xl font-black text-white">Target Color</h2>
+         <span class="text-xs px-3 py-1 rounded-full bg-pink-400/10 text-pink-300 border border-pink-400/20 shadow-[0_0_10px_rgba(255,77,109,0.3)]">역방향 해독</span>
+        </div>
+        <div id="reverseArt" class="rgb-art"></div>
+        <div class="mt-5 p-4 rounded-2xl bg-black/25 border border-cyan-300/15">
+         <p class="text-sm text-cyan-50/70">목표 픽셀 (데이터 값이 숨겨져 있습니다)</p>
+         <p id="reverseTargetValue" class="tech-font text-4xl font-black text-[#ff4d6d] mt-1 drop-shadow-[0_0_8px_rgba(255,77,109,0.4)]">[ ?, ?, ? ]</p>
+        </div>
+       </section>
+       <section class="neon-panel rounded-[30px] p-5 md:p-7">
+        <div class="flex items-center justify-between mb-5">
+         <h2 class="tech-font text-2xl font-black text-white">Data Decoder</h2>
+         <span class="text-xs px-3 py-1 rounded-full bg-green-300/10 text-green-100 border border-green-300/20">데이터 추출</span>
+        </div>
+        <div class="p-4 rounded-2xl bg-black/25 border border-cyan-300/15">
+         <p id="reverseHintText" class="text-sm font-bold text-cyan-50/80 mb-4 bg-black/40 p-3 rounded-xl border border-cyan-300/30 text-center shadow-inner tracking-wide">
+           값을 유추하여 슬라이더를 맞추세요. (오차 허용 ±20)
+         </p>
+         <div class="slider-track mb-3">
+          <label for="revRedSlider" class="block text-sm font-bold text-red-200 mb-1">Red: <span id="revRedValue">0</span></label> 
+          <input id="revRedSlider" type="range" min="0" max="255" value="0">
+         </div>
+         <div class="slider-track mb-3">
+          <label for="revGreenSlider" class="block text-sm font-bold text-green-200 mb-1">Green: <span id="revGreenValue">0</span></label> 
+          <input id="revGreenSlider" type="range" min="0" max="255" value="0">
+         </div>
+         <div class="slider-track">
+          <label for="revBlueSlider" class="block text-sm font-bold text-blue-200 mb-1">Blue: <span id="revBlueValue">0</span></label> 
+          <input id="revBlueSlider" type="range" min="0" max="255" value="0">
+         </div>
+         <div class="mt-4 flex items-center gap-4">
+          <div id="revSliderPreview" class="w-16 h-16 rounded-2xl border border-white/20 bg-black shadow-[0_0_15px_rgba(255,255,255,0.1)]"></div>
+          <button id="checkReverseButton" class="btn-primary px-5 py-3 rounded-2xl font-black w-full flex-1">데이터 전송 및 힌트 확인</button>
+         </div>
+        </div>
+       </section>
+      </div>
+
+     </div>
+    </main>
+   </section>
+
+   <div id="reportModal" class="modal-backdrop" role="dialog" aria-modal="true">
+    <div class="report-modal">
+     <div class="flex items-start justify-between gap-4 mb-5">
+      <div>
+       <p class="text-[#39ff88] font-black text-sm tracking-widest">UNLOCKED REPORT</p>
+       <h2 id="modalTitle" class="tech-font text-3xl md:text-4xl font-black text-white">AI 분석 리포트</h2>
+      </div>
+      <div class="text-right">
+       <p class="text-xs text-cyan-100/60 font-bold mb-1">STAGE SCORE</p>
+       <div id="modalScoreDisplay" class="text-4xl font-black tech-font text-[#39ff88] whitespace-nowrap drop-shadow-[0_0_10px_rgba(57,255,136,0.5)]">+0</div>
+      </div>
+     </div>
+     <div class="grid md:grid-cols-[auto_1fr] gap-5 items-start mb-6">
+      <div id="miniPixelsDisplay" class="flex justify-center items-center"></div>
+      <div>
+       <p id="modalSummary" class="text-lg font-extrabold text-cyan-50 mb-2">이미지 복원 성공!</p>
+       
+       <div id="scoreDetailsBox" class="mt-4 p-4 rounded-xl bg-black/40 border border-cyan-300/30 shadow-inner">
+         <p class="text-sm text-cyan-50/60 font-bold mb-2">SCORE DETAILS & FEEDBACK</p>
+         <ul id="scoreList" class="text-sm font-bold space-y-1 text-cyan-50/90 mb-3"></ul>
+         <p id="mistakeCountText" class="text-white font-bold pt-2 border-t border-white/10 text-sm"></p>
+       </div>
+      </div>
+     </div>
+     <div id="reportCards" class="grid gap-4"></div>
+     <div class="mt-7 flex flex-wrap justify-between gap-3 items-center">
+      <p id="nextHint" class="text-sm text-cyan-50/65 font-bold">확인을 누르면 다음 단계로 이동합니다.</p>
+      <button id="modalConfirmButton" class="btn-primary px-8 py-4 rounded-2xl font-black inline-flex items-center gap-2"> 
+        확인 및 계속 <i data-lucide="arrow-right" class="w-5 h-5"></i> 
+      </button>
+     </div>
+    </div>
+   </div>
+   
+   <div id="toast" class="toast">복원 신호 확인</div>
+  </div>
+
+  <script>
+    // --- Web Audio API (SoundFX) ---
+    const sfx = {
+      ctx: null,
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioContext();
+        }
+      },
+      play(freq, type, duration, vol=0.1) {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + duration);
+      },
+      click() { this.play(800, 'square', 0.05, 0.03); },
+      correct() {
+        this.play(600, 'sine', 0.1, 0.1);
+        setTimeout(() => this.play(800, 'sine', 0.15, 0.1), 100);
+      },
+      wrong() { this.play(150, 'sawtooth', 0.3, 0.1); },
+      stageClear() {
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        notes.forEach((f, i) => {
+          setTimeout(() => this.play(f, 'square', 0.2, 0.05), i * 150);
+        });
+      }
+    };
+
+    const state = {
+      stage: 0,
+      bwStage: 0,
+      timeTotal: 60,
+      timeLeft: 60,
+      timer: null,
+      stageOneClicks: new Set(),
+      stageTwoSolved: new Set(),
+      stageThreeSolved: new Set(),
+      currentReport: "stage1",
+      score: 0,
+      lastEarnedScore: 0,
+      lastScoreDetails: {},
+      wrongClicks: 0, 
+      grayAttempts: 0,
+      rgbAttempts: 0,
+      reverseAttempts: 0 
+    };
+
+    const bwMatrices = [
+      [[0, 0, 0, 0, 0], [0, 1, 0, 1, 0], [0, 0, 0, 0, 0], [1, 0, 0, 0, 1], [0, 1, 1, 1, 0]],
+      [
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 1, 1, 1, 1, 1, 1, 0],
+        [0, 0, 1, 0, 0, 1, 0, 0],
+        [0, 0, 1, 0, 0, 1, 0, 0],
+        [0, 0, 1, 0, 0, 1, 0, 0],
+        [0, 0, 1, 0, 0, 1, 1, 0],
+        [0, 1, 1, 0, 0, 0, 1, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0]
+      ]
+    ];
+
+    const grayMap = [
+      { val: 0, hex: "#000000", name: "검은색" },
+      { val: 64, hex: "#404040", name: "어두운 회색" },
+      { val: 128, hex: "#808080", name: "중간 회색" },
+      { val: 192, hex: "#c0c0c0", name: "밝은 회색" },
+      { val: 255, hex: "#ffffff", name: "흰색" }
+    ];
+    const grayPixelsSets = [ [[0, 1, 2, 1, 0], [1, 2, 3, 2, 1], [2, 3, 4, 3, 2], [1, 2, 3, 2, 1], [0, 1, 2, 1, 0]] ];
+    const grayTargetsSets = [ [{ row: 1, col: 2, val: 192, name: "밝은 회색", hex: "#c0c0c0" }] ];
+
+    let grayStageIndex = 0;
+    let grayTargets = grayTargetsSets[0];
+
+    const colorMap = [
+      { rgb: [57, 255, 136], hex: "#39ff88", name: "네온 그린" },
+      { rgb: [255, 210, 64], hex: "#ffd240", name: "노랑" },
+      { rgb: [255, 77, 109], hex: "#ff4d6d", name: "네온 핑크" },
+      { rgb: [0, 240, 255], hex: "#00f0ff", name: "네온 블루" },
+      { rgb: [100, 150, 255], hex: "#6496ff", name: "보라" },
+      { rgb: [255, 255, 255], hex: "#ffffff", name: "흰색" },
+      { rgb: [255, 150, 100], hex: "#ff9664", name: "주황" },
+      { rgb: [150, 100, 255], hex: "#9664ff", name: "라벤더" }
+    ];
+
+    const rgbPixelsSets = [
+      [[0, 1, 1, 2, 2], [0, 1, 1, 2, 2], [3, 3, 4, 4, 5], [3, 3, 4, 4, 5], [6, 6, 6, 7, 7]],
+      [[7, 6, 1, 1, 2], [7, 6, 1, 1, 2], [0, 0, 5, 5, 2], [0, 0, 3, 3, 4], [4, 4, 3, 3, 4]]
+    ];
+    const rgbTargetsSets = [
+      [{ row: 0, col: 0, rgb: [57, 255, 136], name: "네온 그린", hex: "#39ff88" }],
+      [{ row: 0, col: 0, rgb: [150, 100, 255], name: "라벤더", hex: "#9664ff" }]
+    ];
+
+    let rgbStageIndex = 0;
+    let rgbTargets = rgbTargetsSets[0];
+    const reverseTarget = { rgb: [255, 150, 100], hex: "#ff9664" };
+    let currentTarget = 0;
+
+    const $ = (id) => document.getElementById(id);
+
+    function animateValue(obj, start, end, duration) {
+      let startTimestamp = null;
+      const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        const currentVal = Math.floor(progress * (end - start) + start);
+        obj.innerHTML = currentVal.toLocaleString();
+        if (progress < 1) {
+          window.requestAnimationFrame(step);
+        } else {
+          obj.innerHTML = end.toLocaleString();
+        }
+      };
+      window.requestAnimationFrame(step);
+    }
+
+    function updateScoreDisplay(oldScore, newScore) {
+      const display = $("scoreDisplay");
+      animateValue(display, oldScore, newScore, 800);
+      display.classList.remove("score-animate");
+      void display.offsetWidth;
+      display.classList.add("score-animate");
+    }
+
+    function calculateAndApplyScore(baseScore, penaltyCount, penaltyRate, timeBonusRate) {
+      const timeBonus = state.timeLeft * timeBonusRate;
+      const penalty = penaltyCount * penaltyRate;
+      const stageScore = Math.max(0, baseScore + timeBonus - penalty);
+      
+      state.lastScoreDetails = {
+        base: baseScore, timeBonus: timeBonus, timeLeft: state.timeLeft,
+        penalty: penalty, penaltyCount: penaltyCount, earned: stageScore
+      };
+
+      state.lastEarnedScore = stageScore;
+      const oldScore = state.score;
+      state.score += stageScore;
+      updateScoreDisplay(oldScore, state.score);
+    }
+
+    function renderMatrix() {
+      const viewer = $("matrixViewer");
+      viewer.innerHTML = "";
+      const currentMatrix = bwMatrices[state.bwStage];
+      const size = currentMatrix.length;
+      $("matrixSizeLabel").textContent = `${size} × ${size}`;
+
+      let delayCount = 0;
+      currentMatrix.forEach(row => {
+        const rowEl = document.createElement("div");
+        rowEl.className = "matrix-row";
+        row.forEach(value => {
+          const cell = document.createElement("div");
+          cell.className = "matrix-cell matrix-cell-anim";
+          cell.style.animationDelay = `${delayCount * 0.015}s`;
+          if(size > 5) { cell.style.fontSize = "14px"; cell.style.width = "16px"; }
+          cell.textContent = value;
+          rowEl.appendChild(cell);
+          delayCount++;
+        });
+        viewer.appendChild(rowEl);
+      });
+    }
+
+    function renderPixelGrid() {
+      const grid = $("pixelGrid");
+      grid.innerHTML = "";
+      const currentMatrix = bwMatrices[state.bwStage];
+      const gridSize = currentMatrix.length;
+      grid.className = `pixel-grid grid-${gridSize}`;
+      
+      currentMatrix.flat().forEach((value, index) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "pixel-cell";
+        button.addEventListener("click", () => handlePixelClick(button, index, value));
+        grid.appendChild(button);
+      });
+    }
+
+    function handlePixelClick(button, index, value) {
+      if (state.stage !== 1 || state.stageOneClicks.has(index)) return;
+      const currentMatrix = bwMatrices[state.bwStage];
+      if (value === 1) {
+        sfx.correct(); // 효과음
+        state.stageOneClicks.add(index);
+        button.classList.add("active");
+        updateRestore();
+        if (state.stageOneClicks.size === currentMatrix.flat().filter(v => v === 1).length) {
+          completeStageOne();
+        }
+      } else {
+        sfx.wrong(); // 효과음
+        state.wrongClicks++; 
+        button.classList.add("wrong");
+        showToast(`이 위치는 0입니다. (오답 감점 누적: ${state.wrongClicks}회)`);
+        setTimeout(() => button.classList.remove("wrong"), 320);
+      }
+    }
+
+    function renderGrayArt() {
+      const art = $("grayArt");
+      art.innerHTML = "";
+      art.style.display = "flex"; art.style.justifyContent = "center"; art.style.alignItems = "center";
+      art.style.padding = "20px"; art.style.minHeight = "200px";
+      
+      const target = grayTargets[currentTarget];
+      const colorIndex = grayPixelsSets[grayStageIndex][target.row][target.col];
+      const color = grayMap[colorIndex];
+      
+      const pixelEl = document.createElement("div");
+      pixelEl.className = "rgb-pixel target-pixel grayscale-anim";
+      pixelEl.style.width = "80px"; pixelEl.style.height = "80px";
+      art.appendChild(pixelEl);
+      
+      $("grayTargetValue").textContent = `[${color.val}]`;
+      renderGrayChoices();
+      
+      $("graySlider").value = 0;
+      updateGraySliderPreview();
+    }
+
+    function renderGrayChoices() {
+      const target = grayTargets[currentTarget];
+      const targetColorIndex = grayPixelsSets[grayStageIndex][target.row][target.col];
+      const targetColor = grayMap[targetColorIndex];
+      const otherColors = grayMap.filter((_, idx) => idx !== targetColorIndex);
+      const shuffled = otherColors.sort(() => Math.random() - 0.5).slice(0, 3);
+      const choices = [targetColor, ...shuffled].sort(() => Math.random() - 0.5);
+
+      const box = $("grayChoices");
+      box.innerHTML = "";
+      choices.forEach(choice => {
+        const button = document.createElement("button");
+        button.className = "color-choice";
+        button.innerHTML = `<div class="swatch" style="background:${choice.hex}"></div><div class="font-black text-white">${choice.name}</div>`;
+        button.addEventListener("click", () => checkGray(choice.val));
+        box.appendChild(button);
+      });
+    }
+
+    function updateGraySliderPreview() {
+      const v = Number($("graySlider").value);
+      $("grayValue").textContent = v;
+      $("graySliderPreview").style.background = `rgb(${v}, ${v}, ${v})`;
+    }
+
+    function checkGray(val) {
+      if (!grayTargets[currentTarget]) return;
+      const target = grayTargets[currentTarget];
+      const correct = val === target.val;
+
+      if (correct) {
+        sfx.correct(); // 효과음
+        state.stageTwoSolved.add(currentTarget);
+        showToast("명도 값 일치! 그레이스케일 픽셀이 복원되었습니다.");
+        currentTarget++;
+        updateRestore();
+
+        if (currentTarget >= grayTargets.length) {
+          completeStageTwo();
+        } else {
+          renderGrayArt();
+        }
+      } else {
+        sfx.wrong(); // 효과음
+        state.grayAttempts++;
+        showToast(`밝기 값이 다릅니다. (오류 감점 누적: ${state.grayAttempts}회)`);
+      }
+    }
+
+    function renderRgbArt() {
+      const art = $("rgbArt");
+      art.innerHTML = "";
+      art.style.display = "flex"; art.style.justifyContent = "center"; art.style.alignItems = "center";
+      art.style.padding = "20px"; art.style.minHeight = "200px";
+      
+      const target = rgbTargets[currentTarget];
+      const color = colorMap[rgbPixelsSets[rgbStageIndex][target.row][target.col]];
+      
+      const pixelEl = document.createElement("div");
+      pixelEl.className = "rgb-pixel target-pixel rainbow";
+      pixelEl.style.background = color.hex;
+      pixelEl.style.width = "80px"; pixelEl.style.height = "80px";
+      art.appendChild(pixelEl);
+      
+      $("rgbTargetValue").textContent = `[${color.rgb.join(", ")}]`;
+      renderRgbChoices();
+      resetRgbSliders();
+    }
+
+    function renderRgbChoices() {
+      const target = rgbTargets[currentTarget];
+      const targetColorIndex = rgbPixelsSets[rgbStageIndex][target.row][target.col];
+      const targetColor = colorMap[targetColorIndex];
+      const otherColors = colorMap.filter((_, idx) => idx !== targetColorIndex);
+      const shuffled = otherColors.sort(() => Math.random() - 0.5).slice(0, 3);
+      const choices = [targetColor, ...shuffled].sort(() => Math.random() - 0.5);
+
+      const box = $("colorChoices");
+      box.innerHTML = "";
+      choices.forEach(choice => {
+        const button = document.createElement("button");
+        button.className = "color-choice";
+        button.innerHTML = `<div class="swatch" style="background:${choice.hex}"></div><div class="font-black text-white">${choice.name}</div>`;
+        button.addEventListener("click", () => checkRgb(choice.rgb));
+        box.appendChild(button);
+      });
+    }
+
+    function resetRgbSliders() {
+      ["red", "green", "blue"].forEach(color => {
+        $(`${color}Slider`).value = 0;
+        $(`${color}Value`).textContent = "0";
+      });
+      updateRgbSliderPreview();
+    }
+
+    function updateRgbSliderPreview() {
+      const r = Number($("redSlider").value);
+      const g = Number($("greenSlider").value);
+      const b = Number($("blueSlider").value);
+      $("redValue").textContent = r; $("greenValue").textContent = g; $("blueValue").textContent = b;
+      $("sliderPreview").style.background = `rgb(${r}, ${g}, ${b})`;
+    }
+
+    function checkRgb(rgb) {
+      if (!rgbTargets[currentTarget]) return;
+      const target = rgbTargets[currentTarget];
+      const targetRgb = target.rgb;
+      const correct = rgb[0] === targetRgb[0] && rgb[1] === targetRgb[1] && rgb[2] === targetRgb[2];
+
+      if (correct) {
+        sfx.correct(); // 효과음
+        state.stageThreeSolved.add(currentTarget);
+        showToast("RGB 값 일치! 픽셀이 복원되었습니다.");
+        currentTarget++;
+        updateRestore();
+
+        if (currentTarget >= rgbTargets.length) {
+          completeStageThree();
+        } else {
+          renderRgbArt();
+        }
+      } else {
+        sfx.wrong(); // 효과음
+        state.rgbAttempts++;
+        showToast(`색상 값이 다릅니다. (오류 감점 누적: ${state.rgbAttempts}회)`);
+      }
+    }
+
+    function renderReverseArt() {
+      const art = $("reverseArt");
+      art.innerHTML = "";
+      art.style.display = "flex"; art.style.justifyContent = "center"; art.style.alignItems = "center";
+      art.style.padding = "20px"; art.style.minHeight = "200px";
+      
+      const pixelEl = document.createElement("div");
+      pixelEl.className = "rgb-pixel"; 
+      pixelEl.style.background = reverseTarget.hex;
+      pixelEl.style.width = "90px"; pixelEl.style.height = "90px";
+      pixelEl.style.border = "3px solid rgba(255, 77, 109, 0.8)";
+      pixelEl.style.boxShadow = "0 0 20px rgba(255, 77, 109, 0.4)";
+      art.appendChild(pixelEl);
+      
+      resetReverseSliders();
+      $("reverseHintText").innerHTML = "값을 유추하여 슬라이더를 맞추세요. (오차 허용 ±20)";
+    }
+
+    function resetReverseSliders() {
+      ["revRed", "revGreen", "revBlue"].forEach(color => {
+        $(`${color}Slider`).value = 0;
+        $(`${color}Value`).textContent = "0";
+      });
+      updateReverseSliderPreview();
+    }
+
+    function updateReverseSliderPreview() {
+      const r = Number($("revRedSlider").value);
+      const g = Number($("revGreenSlider").value);
+      const b = Number($("revBlueSlider").value);
+      $("revRedValue").textContent = r; $("revGreenValue").textContent = g; $("revBlueValue").textContent = b;
+      $("revSliderPreview").style.background = `rgb(${r}, ${g}, ${b})`;
+    }
+
+    function checkReverseRgb() {
+      const r = Number($("revRedSlider").value);
+      const g = Number($("revGreenSlider").value);
+      const b = Number($("revBlueSlider").value);
+
+      const t = reverseTarget.rgb;
+      const rDiff = t[0] - r;
+      const gDiff = t[1] - g;
+      const bDiff = t[2] - b;
+      const tolerance = 10;
+
+      const isRCorrect = Math.abs(rDiff) <= tolerance;
+      const isGCorrect = Math.abs(gDiff) <= tolerance;
+      const isBCorrect = Math.abs(bDiff) <= tolerance;
+
+      if (isRCorrect && isGCorrect && isBCorrect) {
+        sfx.correct(); // 효과음
+        $("reverseTargetValue").textContent = `[${t[0]}, ${t[1]}, ${t[2]}]`;
+        $("reverseTargetValue").style.color = "#39ff88";
+        showToast("해독 성공! 눈으로 본 색상을 데이터로 완벽하게 변환했습니다.");
+        updateRestore(100);
+        setTimeout(() => completeStageFour(), 800);
+      } else {
+        sfx.wrong(); // 효과음
+        state.reverseAttempts++;
+        let hints = [];
+        
+        if (!isRCorrect) hints.push(`R <span class="text-white">${rDiff > 0 ? '올리세요 ⬆️' : '낮추세요 ⬇️'}</span>`);
+        else hints.push(`R <span class="text-[#39ff88]">🆗</span>`);
+
+        if (!isGCorrect) hints.push(`G <span class="text-white">${gDiff > 0 ? '올리세요 ⬆️' : '낮추세요 ⬇️'}</span>`);
+        else hints.push(`G <span class="text-[#39ff88]">🆗</span>`);
+
+        if (!isBCorrect) hints.push(`B <span class="text-white">${bDiff > 0 ? '올리세요 ⬆️' : '낮추세요 ⬇️'}</span>`);
+        else hints.push(`B <span class="text-[#39ff88]">🆗</span>`);
+
+        $("reverseHintText").innerHTML = hints.join(" &nbsp;|&nbsp; ");
+        showToast(`데이터 불일치! 힌트를 참조하여 다시 시도하세요. (오답: ${state.reverseAttempts}회)`);
+      }
+    }
+
+    function updateRestore(forceValue = -1) {
+      let percent = 0;
+      if (forceValue !== -1) {
+        percent = forceValue;
+      } else {
+        if (state.stage === 1) {
+          const currentMatrix = bwMatrices[state.bwStage];
+          const totalOnes = currentMatrix.flat().filter(v => v === 1).length;
+          percent = Math.round((state.stageOneClicks.size / totalOnes) * 100);
+        } else if (state.stage === 2) {
+          percent = Math.round((state.stageTwoSolved.size / grayTargets.length) * 100);
+        } else if (state.stage === 3) {
+          percent = Math.round((state.stageThreeSolved.size / rgbTargets.length) * 100);
+        } else if (state.stage === 4) {
+          percent = 0; 
+        }
+      }
+      $("restorePercent").textContent = `${percent}%`;
+      $("restoreFill").style.width = `${percent}%`;
+    }
+
+    function resetHud(seconds) {
+      clearInterval(state.timer);
+      state.timeTotal = seconds; state.timeLeft = seconds;
+      updateRestore();
+      $("timeText").textContent = `${seconds}초`;
+      $("timeFill").style.width = "100%";
+      
+      $("timeFill").classList.remove("time-danger");
+      $("timeText").classList.remove("text-danger");
+
+      state.timer = setInterval(() => {
+        state.timeLeft = Math.max(0, state.timeLeft - 1);
+        $("timeText").textContent = `${state.timeLeft}초`;
+        $("timeFill").style.width = `${(state.timeLeft / state.timeTotal) * 100}%`;
+        
+        if (state.timeLeft <= 5 && state.timeLeft > 0) {
+          $("timeFill").classList.add("time-danger");
+          $("timeText").classList.add("text-danger");
+        } else if (state.timeLeft <= 0) {
+          $("timeFill").classList.remove("time-danger");
+          $("timeText").classList.remove("text-danger");
+          clearInterval(state.timer);
+          showToast("시간 종료! 보너스 점수가 더 이상 주어지지 않습니다.");
+        }
+      }, 1000);
+    }
+
+    function startGame() {
+      sfx.init(); // 효과음 컨텍스트 초기화
+      sfx.click();
+      $("startScreen").style.display = "none";
+      $("playScreen").style.display = "flex";
+      state.score = 0;
+      updateScoreDisplay(0, 0);
+      startStageOne();
+    }
+
+    function startStageOne() {
+      state.stage = 1;
+      state.stageOneClicks.clear();
+      state.wrongClicks = 0; 
+      $("stageOne").classList.remove("hidden");
+      $("stageTwo").classList.add("hidden");
+      $("stageThree").classList.add("hidden");
+      $("stageFour").classList.add("hidden");
+
+      const stageNames = ["Stage 1-1 · 이진 흑백 (5x5)", "Stage 1-2 · 파이 기호 타임어택 (8x8)"];
+      $("stageTitle").textContent = stageNames[state.bwStage];
+      $("instructionText").textContent = "좌측 행렬에서 값이 1인 위치를 빠르게 찾아 우측 격자를 클릭하세요.";
+      
+      renderMatrix();
+      renderPixelGrid();
+      // 타임어택 15초 / 30초
+      resetHud(state.bwStage === 0 ? 15 : 30);
+    }
+
+    function startStageTwo() {
+      state.stage = 2;
+      state.stageTwoSolved.clear();
+      state.grayAttempts = 0;
+      currentTarget = 0; grayStageIndex = 0;
+      grayTargets = grayTargetsSets[0];
+      
+      $("stageOne").classList.add("hidden");
+      $("stageTwo").classList.remove("hidden");
+      
+      $("stageTitle").textContent = "Stage 2 · 그레이스케일 채널 복원";
+      $("instructionText").textContent = "지속적으로 변하는 픽셀의 상태를 확인하고, 제시된 목표 [명암값]에 맞는 밝기(0~255)를 선택하거나 슬라이더로 맞추세요.";
+      
+      renderGrayArt();
+      resetHud(60);
+    }
+
+    function startStageThree() {
+      state.stage = 3;
+      state.stageThreeSolved.clear();
+      state.rgbAttempts = 0;
+      currentTarget = 0; 
+      rgbTargets = rgbTargetsSets[rgbStageIndex];
+      
+      $("stageTwo").classList.add("hidden");
+      $("stageThree").classList.remove("hidden");
+      
+      const stageNames = ["Stage 3-1 · RGB 다중 채널 복원", "Stage 3-2 · RGB 조합의 확장"];
+      $("stageTitle").textContent = stageNames[rgbStageIndex];
+      $("instructionText").textContent = "강조 표시된 픽셀의 [R, G, B] 행렬 값을 보고 세 가지 채널의 색상을 조합하세요.";
+      
+      renderRgbArt();
+      resetHud(75);
+    }
+
+    function startStageFour() {
+      state.stage = 4;
+      state.reverseAttempts = 0;
+      
+      $("stageThree").classList.add("hidden");
+      $("stageFour").classList.remove("hidden");
+      
+      $("stageTitle").textContent = "Stage 4 · 역방향 해독 (Reverse Engineering)";
+      $("instructionText").textContent = "표시된 색상을 눈으로 보고, 슬라이더를 조작하여 숨겨진 [R, G, B] 데이터를 유추해 내세요. 피드백을 통해 오차를 좁혀갈 수 있습니다.";
+      
+      renderReverseArt();
+      resetHud(100); 
+    }
+
+    function completeStageOne() {
+      clearInterval(state.timer);
+      sfx.stageClear(); // 효과음
+      calculateAndApplyScore(500, state.wrongClicks, 200, 10);
+      if(state.bwStage < bwMatrices.length - 1) {
+        state.currentReport = "stage1-next";
+        $("nextHint").textContent = "다음 흑백 패턴(8x8)으로 이동합니다.";
+      } else {
+        state.currentReport = "stage1-final";
+        $("nextHint").textContent = "그레이스케일 단계로 이동합니다.";
+      }
+      showReport("stage1");
+    }
+
+    function completeStageTwo() {
+      clearInterval(state.timer);
+      sfx.stageClear(); // 효과음
+      calculateAndApplyScore(800, state.grayAttempts, 400, 20);
+      state.currentReport = "stage2-final";
+      $("nextHint").textContent = "다중 채널(RGB) 단계로 이동합니다.";
+      showReport("stage2");
+    }
+
+    function completeStageThree() {
+      clearInterval(state.timer);
+      sfx.stageClear(); // 효과음
+      calculateAndApplyScore(1000, state.rgbAttempts, 800, 50);
+      if (rgbStageIndex < rgbPixelsSets.length - 1) {
+        state.currentReport = "stage3-next";
+        $("nextHint").textContent = "다음 RGB 패턴으로 이동합니다.";
+      } else {
+        state.currentReport = "stage3-final";
+        $("nextHint").textContent = "최종 역방향 해독 단계로 이동합니다.";
+      }
+      showReport("stage3");
+    }
+
+    function completeStageFour() {
+      clearInterval(state.timer);
+      sfx.stageClear(); // 효과음
+      calculateAndApplyScore(2000, state.reverseAttempts, 1000, 100);
+      state.currentReport = "stage4-final";
+      $("nextHint").textContent = "최종 랭킹 화면으로 이동합니다.";
+      showReport("stage4");
+    }
+
+    function showReport(type) {
+      const cards = $("reportCards");
+      cards.innerHTML = "";
+      const display = $("miniPixelsDisplay");
+      display.innerHTML = "";
+
+      const d = state.lastScoreDetails;
+      animateValue($("modalScoreDisplay"), 0, state.lastEarnedScore, 800);
+      
+      $("scoreList").innerHTML = `
+        <li class="flex justify-between"><span>기본 점수</span> <span>+${d.base.toLocaleString()}</span></li>
+        <li class="flex justify-between"><span>시간 보너스 (${d.timeLeft}초)</span> <span class="text-[#39ff88]">+${d.timeBonus.toLocaleString()}</span></li>
+        <li class="flex justify-between text-[#ff4d6d]"><span>오답 감점 (${d.penaltyCount}회)</span> <span>-${d.penalty.toLocaleString()}</span></li>
+        <li class="flex justify-between font-black text-[#39ff88] mt-2 pt-2 border-t border-cyan-300/30 text-base"><span>최종 획득</span> <span>+${d.earned.toLocaleString()}</span></li>
+      `;
+
+      if (type === "stage1") {
+        $("modalSummary").textContent = "이진 행렬 복원 성공!";
+        $("mistakeCountText").innerHTML = `▶ 위치 착각 등 오답 시도: <span class="text-[#ff4d6d]">${state.wrongClicks}</span>회`;
+        
+        const currentMatrix = bwMatrices[state.bwStage];
+        const size = currentMatrix.length;
+        display.style.cssText = `display:grid; grid-template-columns:repeat(${size}, 12px); gap:3px; padding:12px; background:rgba(0,0,0,.3); border-radius:12px;`;
+        currentMatrix.flat().forEach(value => {
+          const span = document.createElement("span");
+          span.style.cssText = `width:12px; height:12px; border-radius:3px; background:rgba(217,255,246,.12);`;
+          if (value === 1) { span.style.background = "#39ff88"; span.style.boxShadow = "0 0 8px rgba(57,255,136,.6)"; }
+          display.appendChild(span);
+        });
+
+        cards.innerHTML = `
+          <article class="rounded-3xl p-5 bg-white/5 border border-cyan-300/15">
+            <h3 class="text-xl font-black text-[#39ff88] mb-2">이진(Binary) 데이터</h3>
+            <p class="text-cyan-50/78 leading-relaxed">디지털 세계의 가장 기초적인 단위입니다. 컴퓨터는 0과 1만을 사용하여 이미지를 기록하고 읽어냅니다.</p>
+          </article>
+        `;
+      } 
+      else if (type === "stage2") {
+        $("modalSummary").textContent = "그레이스케일 복원 성공!";
+        $("mistakeCountText").innerHTML = `▶ 잘못된 명도 시도: <span class="text-[#ff4d6d]">${state.grayAttempts}</span>회`;
+        
+        const target = grayTargetsSets[0][0];
+        const color = grayMap.find(c => c.val === target.val);
+        display.style.cssText = `display:flex; justify-content:center; padding:20px;`;
+        display.innerHTML = `<span style="width:60px; height:60px; background:${color.hex}; border-radius:12px; border:2px solid rgba(255,255,255,.4);"></span>`;
+
+        cards.innerHTML = `
+          <article class="rounded-3xl p-5 bg-white/5 border border-cyan-300/15">
+            <h3 class="text-xl font-black text-[#39ff88] mb-2">단일 채널 (Single Channel)</h3>
+            <p class="text-cyan-50/78 leading-relaxed">0(검은색)부터 255(흰색)까지 256단계의 숫자로 픽셀의 밝기를 표현하는 그레이스케일 원리입니다. 이제 픽셀은 0과 1을 넘어 다양한 값을 가지게 되었습니다.</p>
+          </article>
+        `;
+      }
+      else if (type === "stage3") {
+        $("modalSummary").textContent = "RGB 다중 채널 복원 성공!";
+        $("mistakeCountText").innerHTML = `▶ 잘못된 색상 조합 시도: <span class="text-[#ff4d6d]">${state.rgbAttempts}</span>회`;
+        
+        const target = rgbTargetsSets[rgbStageIndex][0];
+        const color = colorMap.find(c => c.hex === target.hex);
+        display.style.cssText = `display:flex; justify-content:center; padding:20px;`;
+        display.innerHTML = `<span style="width:60px; height:60px; background:${color.hex}; border-radius:12px; border:2px solid rgba(255,255,255,.4);"></span>`;
+
+        cards.innerHTML = `
+          <article class="rounded-3xl p-5 bg-white/5 border border-cyan-300/15">
+            <h3 class="text-xl font-black text-[#39ff88] mb-2">다중 채널 (Multi Channel)</h3>
+            <p class="text-cyan-50/78 leading-relaxed">이제 데이터 층(채널)이 R, G, B 3개로 늘어났습니다. 컴퓨터가 수많은 색을 표현하기 위해 3개의 행렬을 동시에 겹쳐서 사용한다는 핵심을 완벽히 이해했습니다.</p>
+          </article>
+        `;
+      }
+      else if (type === "stage4") {
+        $("modalSummary").textContent = "역방향 해독(Reverse Engineering) 성공!";
+        $("mistakeCountText").innerHTML = `▶ 피드백 참조 횟수: <span class="text-white">${state.reverseAttempts}</span>회`;
+        
+        display.style.cssText = `display:flex; justify-content:center; padding:20px;`;
+        display.innerHTML = `<span style="width:60px; height:60px; background:${reverseTarget.hex}; border-radius:12px; border:2px solid rgba(255,255,255,.4);"></span>`;
+
+        cards.innerHTML = `
+          <article class="rounded-3xl p-5 bg-white/5 border border-cyan-300/15">
+            <h3 class="text-xl font-black text-[#ff4d6d] mb-2">디지타이징 (Digitizing)</h3>
+            <p class="text-cyan-50/78 leading-relaxed">시각적 색상을 보고 행렬 데이터를 역으로 추적해냈습니다. 오차를 분석하고 수치를 보정해가는 이 과정이 바로 컴퓨터가 현실의 이미지를 데이터로 변환하는 핵심 방식입니다.</p>
+          </article>
+        `;
+      }
+
+      $("reportModal").classList.add("open");
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function closeReport() {
+      sfx.click();
+      $("reportModal").classList.remove("open");
+      if (state.currentReport === "stage1-next") {
+        state.bwStage++;
+        startStageOne();
+      } else if (state.currentReport === "stage1-final") {
+        startStageTwo();
+      } else if (state.currentReport === "stage2-final") {
+        startStageThree();
+      } else if (state.currentReport === "stage3-next") {
+        rgbStageIndex++;
+        startStageThree();
+      } else if (state.currentReport === "stage3-final") {
+        startStageFour();
+      } else if (state.currentReport === "stage4-final") {
+        showFinal();
+      }
+    }
+
+    function showFinal() {
+      $("stageOne").classList.add("hidden"); 
+      $("stageTwo").classList.add("hidden"); 
+      $("stageThree").classList.add("hidden");
+      $("stageFour").classList.add("hidden");
+      $("stageTitle").textContent = "작전 완료 · 최종 랭킹 정산";
+      $("restorePercent").textContent = "100%"; $("restoreFill").style.width = "100%";
+      $("timeText").textContent = "완료"; $("timeFill").style.width = "100%";
+      $("timeFill").classList.remove("time-danger"); $("timeText").classList.remove("text-danger");
+      
+      const main = document.querySelector("main .max-w-7xl");
+      main.innerHTML += `
+        <section class="neon-panel rounded-[34px] p-8 text-center mt-6 animate-[fadeIn_0.5s_ease-out]">
+          <div class="text-xs text-[#39ff88] font-bold tracking-widest mb-2">MISSION ACCOMPLISHED</div>
+          <h2 class="tech-font text-5xl font-black text-white mb-6">FINAL SCORE</h2>
+          <div class="text-7xl font-black tech-font text-[#00f0ff] mb-8" style="text-shadow: 0 0 40px rgba(0,240,255,0.4);">
+            ${state.score.toLocaleString()} PTS
+          </div>
+          <p class="text-cyan-50/75 max-w-2xl mx-auto leading-relaxed mb-8">
+            훌륭합니다! 손상된 데이터를 복원하는 것부터 눈으로 본 색상을 데이터로 역추적하는 과정까지 완벽하게 수행했습니다. <br>
+            AI가 이미지를 단순한 그림이 아닌 수학적 행렬로 인식한다는 원리를 아주 잘 학습했습니다.
+          </p>
+          <button onclick="location.reload()" class="btn-primary px-10 py-5 rounded-2xl font-black text-xl inline-flex items-center justify-center gap-3">
+            <i data-lucide="rotate-ccw" class="w-6 h-6"></i> 랭킹 경신 재도전
+          </button>
+        </section>
+      `;
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function showToast(message) {
+      const toast = $("toast"); toast.innerHTML = message;
+      toast.classList.add("show"); setTimeout(() => toast.classList.remove("show"), 2200); 
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      $("startButton").addEventListener("click", startGame);
+      $("modalConfirmButton").addEventListener("click", closeReport);
+      
+      $("graySlider").addEventListener("input", () => { sfx.click(); updateGraySliderPreview(); });
+      $("checkGrayButton").addEventListener("click", () => { checkGray(Number($("graySlider").value)); });
+
+      ["redSlider", "greenSlider", "blueSlider"].forEach(id => {
+        $(id).addEventListener("input", () => { sfx.click(); updateRgbSliderPreview(); });
+      });
+      $("checkSliderButton").addEventListener("click", () => {
+        checkRgb([Number($("redSlider").value), Number($("greenSlider").value), Number($("blueSlider").value)]);
+      });
+
+      ["revRedSlider", "revGreenSlider", "revBlueSlider"].forEach(id => {
+        $(id).addEventListener("input", () => { sfx.click(); updateReverseSliderPreview(); });
+      });
+      $("checkReverseButton").addEventListener("click", checkReverseRgb);
+
+      if (window.lucide) lucide.createIcons();
+    });
+  </script>
+ </body>
+</html>
