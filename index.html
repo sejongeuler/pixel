@@ -359,6 +359,27 @@ main{flex:1;padding:20px 0 44px}
 .swatch{height:46px;border-radius:calc(12px * var(--round));border:1px solid rgba(255,255,255,.2);margin-bottom:9px}
 .choice .nm{font-weight:800;color:#fff;font-size:.9rem}
 .choice .vl{font-family:var(--mono);font-size:.76rem;color:var(--ink-faint);margin-top:2px}
+/* 색 보기 : 픽셀 한 칸처럼 정사각형 타일로 보여 준다 (2·3단계, 최종 단계, 서바이벌의 색 고르기).
+   숫자 보기(.choice.num)와 그림 보기는 예전 모양 그대로다.
+   --tile 은 타일 한 변의 길이 — 두 줄로 놓아도 예전 가로 막대 보기와 높이가 비슷하도록 잡았다.
+   보기 번호는 색을 가리지 않게 타일 왼쪽 위 모서리에 작은 딱지로 얹는다 */
+.choices.tiles{--tile:clamp(84px,8.4vw,108px);grid-template-columns:repeat(2,var(--tile));justify-content:center}
+.choice.tile{position:relative;width:var(--tile);height:var(--tile);padding:6px}
+.choice.tile .swatch{width:100%;height:100%;margin:0}
+.choice.tile .nm{position:absolute;left:0;top:0;margin:0;padding:2px 8px;font-size:.76rem;font-weight:800;line-height:1.5;
+  color:#fff;background:rgba(2,8,12,.86);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+@media(min-width:561px) and (max-width:900px){   /* 세로 태블릿 : 네 개를 한 줄로 */
+  .choices.tiles{--tile:clamp(84px,13vw,112px);grid-template-columns:repeat(4,var(--tile))}
+}
+@media(max-width:560px){.choices.tiles{--tile:clamp(84px,26vw,112px)}}
+/* 최종 단계는 오른쪽 패널에 정보가 많다 — 색 보기 네 개를 한 줄로 놓아 스크롤하지 않아도 보이게 한다
+   (칸 폭에 맞춰 줄어드는 정사각형, 가장 클 때 한 변 104px) */
+#pkChoices.tiles{grid-template-columns:repeat(4,minmax(0,104px));gap:8px;margin-bottom:36px}
+#pkChoices.tiles .choice.tile{width:auto;height:auto;padding:5px}
+#pkChoices.tiles .choice.tile .swatch{height:auto;aspect-ratio:1/1}
+/* 타일이 작아서 번호를 색 위에 얹으면 색이 많이 가려진다 → 번호는 타일 바로 아래에 둔다 */
+#pkChoices.tiles .choice.tile .nm{left:0;right:0;top:100%;padding:5px 0 0;font-size:.72rem;text-align:center;
+  background:none;border:0;color:var(--ink-dim)}
 
 /* ---------- 슬라이더 ---------- */
 .mixer{padding:16px;border-radius:var(--r-m);background:rgba(0,0,0,.3);border:1px solid rgba(0,240,255,.14)}
@@ -1031,7 +1052,7 @@ details[open]>.mixer-head .chev{transform:rotate(180deg)}
     </section>
     <section class="panel card">
      <div class="card-head"><h2>Gray Restorer</h2><span class="tag green">밝기 맞추기</span></div>
-     <div id="grayChoices" class="choices"></div>
+     <div id="grayChoices" class="choices tiles"></div>
      <details class="mixer">
       <summary class="mixer-head">밝기 실험대 <span class="ref-badge">참고용</span>
        <svg class="icon chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
@@ -1072,7 +1093,7 @@ details[open]>.mixer-head .chev{transform:rotate(180deg)}
     </section>
     <section class="panel card">
      <div class="card-head"><h2>RGB Restorer</h2><span class="tag green">색 조합하기</span></div>
-     <div id="colorChoices" class="choices"></div>
+     <div id="colorChoices" class="choices tiles"></div>
      <details class="mixer">
       <summary class="mixer-head">색 섞기 실험대 <span class="ref-badge">참고용</span>
        <svg class="icon chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
@@ -2166,7 +2187,7 @@ function renderGrayChoices() {
   const box = $("grayChoices"); box.innerHTML = "";
   shuffle([t.v, ...grayDistractors(t.v)]).forEach(v => {
     const b = document.createElement("button");
-    b.type = "button"; b.className = "choice";
+    b.type = "button"; b.className = "choice tile";
     const no = box.children.length + 1;
     b.innerHTML = '<div class="swatch" style="background:' + hex(v,v,v) + '"></div>' +
                   '<div class="nm">' + no + '번</div>';
@@ -2279,7 +2300,7 @@ function renderRgbChoices() {
   const box = $("colorChoices"); box.innerHTML = "";
   shuffle([t.v, ...rgbDistractors(t.v)]).forEach(rgb => {
     const b = document.createElement("button");
-    b.type = "button"; b.className = "choice";
+    b.type = "button"; b.className = "choice tile";
     const no = box.children.length + 1;
     b.innerHTML = '<div class="swatch" style="background:' + hex(rgb[0],rgb[1],rgb[2]) + '"></div>' +
                   '<div class="nm">' + no + '번</div>';
@@ -2662,12 +2683,13 @@ function onFinalCellTap(cell, r, c) {
 
 function renderPacketChoices(pk) {
   const box = $("pkChoices"); box.innerHTML = "";
+  box.classList.toggle("tiles", pk.type === "normal");     /* 색 보기는 정사각형 타일, 숫자 보기는 가로 버튼 */
   if (pk.type === "normal") {
     /* 팔레트의 다른 색들 중 3개 (충분히 다른 색만) */
     const others = shuffle(FACE_PAL.filter(p => p.hex !== pk.hex && rgbDist(p.rgb, pk.rgb) > 45)).slice(0, 3);
     shuffle([FACE_PAL.find(p => p.hex === pk.hex), ...others]).forEach((p, k) => {
       const b = document.createElement("button");
-      b.type = "button"; b.className = "choice";
+      b.type = "button"; b.className = "choice tile";
       b.innerHTML = '<div class="swatch" style="background:' + p.hex + '"></div><div class="nm">' + (k + 1) + '번</div>';
       b.setAttribute("aria-label", "색 후보 " + (k + 1) + "번");
       b.addEventListener("click", () => tryPacket(rgbDist(p.rgb, pk.rgb) < 1, b));
@@ -3775,7 +3797,7 @@ const SURV_GEN = {
   gray(L) {
     const v = 8 + randInt(240);
     const opts = spreadPick(v, () => randInt(256), (a, b) => Math.abs(a - b), Math.max(16, 66 - L * 5), 4);
-    return { type:"choice", prompt:"이 밝기 값에 맞는 색을 고르세요.",
+    return { type:"choice", tile:true, prompt:"이 밝기 값에 맞는 색을 고르세요.",
       data:'<div><p class="surv-big">' + v + '</p><p class="art-cap">0 = 검정 · 255 = 흰색</p></div>',
       choices: opts.map(o => ({ ok: o === v, html:'<div class="swatch" style="background:' + hex(o, o, o) + '"></div>' })),
       answer:"밝기 " + v };
@@ -3784,7 +3806,7 @@ const SURV_GEN = {
     const rnd = () => [0, 1, 2].map(() => 10 + randInt(236));
     const t = rnd();
     const opts = spreadPick(t, rnd, rgbDist, Math.max(50, 160 - L * 12), 4);
-    return { type:"choice", prompt:"이 [R, G, B] 값에 맞는 색을 고르세요.",
+    return { type:"choice", tile:true, prompt:"이 [R, G, B] 값에 맞는 색을 고르세요.",
       data:'<p class="surv-big">[' + t.join(", ") + ']</p>',
       choices: opts.map(o => ({ ok: o === t, html:'<div class="swatch" style="background:' + hex(o[0], o[1], o[2]) + '"></div>' })),
       answer:"[" + t.join(", ") + "]" };
@@ -3879,6 +3901,7 @@ function nextSurvQ() {
   $("survPrompt").innerHTML = q.prompt;
   const data = $("survData"), box = $("survChoices");
   box.innerHTML = "";
+  box.classList.toggle("tiles", !!q.tile);       /* 색 보기(tile)만 정사각형 타일로 놓는다 */
   if (q.type === "tap") {
     data.innerHTML = ""; data.appendChild(buildSurvGrid(q));
     box.innerHTML = '<div class="surv-tap">왼쪽 이미지에서<br><b>' + q.answer + '</b> 칸을 직접 탭하세요.</div>';
@@ -3886,7 +3909,7 @@ function nextSurvQ() {
     data.innerHTML = q.data;
     shuffle(q.choices).forEach((o, k) => {
       const b = document.createElement("button");
-      b.type = "button"; b.className = "choice" + (q.num ? " num" : "");
+      b.type = "button"; b.className = "choice" + (q.num ? " num" : "") + (q.tile ? " tile" : "");
       if (q.num) b.textContent = o.text;
       else b.innerHTML = o.html + '<div class="nm">' + (k + 1) + '번</div>';
       b.setAttribute("aria-label", "후보 " + (k + 1) + "번" + (q.num ? " " + o.text : ""));
