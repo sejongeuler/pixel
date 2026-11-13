@@ -466,8 +466,14 @@ details[open]>.mixer-head .chev{transform:rotate(180deg)}
 @media(hover:hover){.fcell:hover{filter:brightness(1.25)}}
 .pk-swatch{width:72px;height:72px;border-radius:calc(14px * var(--round));border:2px solid rgba(255,255,255,.25);
   box-shadow:inset 0 2px 8px rgba(0,0,0,.5)}
-.choice.num{font-family:var(--mono);font-weight:800;font-size:.92rem;color:#eafff8;
-  text-align:center;padding:14px 6px}
+/* 숫자 보기 [R, G, B] (최종 단계 암호 패킷 · 서바이벌 색→값) : 세 숫자가 꼭 한 줄에 들어가야 읽기 쉽다.
+   예전에는 칸이 좁으면 "[255, 198," / "77]" 처럼 끊겼다 → 줄바꿈을 막고, 가장 긴 '[255, 255, 255]'(약 128px)가
+   들어갈 만큼 칸이 넓을 때만 나란히 놓는다. 좁은 오른쪽 패널(가로 화면 약 1130px 미만)에서는 한 줄에 하나씩 쌓인다 */
+.choice.num{font-family:var(--mono);font-weight:800;font-size:.86rem;color:#eafff8;
+  text-align:center;padding:12px 4px;white-space:nowrap}
+.choices.nums{grid-template-columns:repeat(auto-fit,minmax(min(100%,128px),1fr));gap:10px}
+/* 폰·좁은 세로 태블릿 : 자동으로 놓으면 '셋 + 하나'가 될 수 있는 폭이라 두 개씩 두 줄로 고정 */
+@media(max-width:640px){.choices.nums{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 /* ---------- 개념 체크 퀴즈 ---------- */
 .quiz{margin-top:16px;padding:16px 18px;border-radius:var(--r-l);
@@ -898,6 +904,26 @@ details[open]>.mixer-head .chev{transform:rotate(180deg)}
 .pcell:disabled{cursor:default}
 @media(hover:hover){.pcell:not(:disabled):hover{outline:2px solid var(--cyan);outline-offset:1px}}
 
+/* ---------- 소리 : 설정 창 · 소리로 듣기 · 별이 하나씩 켜짐 ---------- */
+.snd-list{display:grid;gap:10px}
+.snd-row{display:flex;align-items:center;justify-content:space-between;gap:10px 16px;flex-wrap:wrap;padding:12px 14px;
+  border-radius:var(--r-m);background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09)}
+.snd-k{font-weight:800;color:#fff;font-size:.98rem;line-height:1.4;word-break:keep-all}
+.snd-k small{display:block;margin-top:2px;font-size:.76rem;font-weight:600;color:var(--ink-faint)}
+.snd-row .chip-toggle button{padding:10px 16px;min-height:44px}
+.snd-foot{margin-top:16px;display:grid;gap:12px;justify-items:center;text-align:center}
+.snd-foot .ref-note{margin:0}
+.simple-sound{margin-top:14px;font-size:.88rem}
+.rep-mini{display:grid;gap:8px;justify-items:center;flex:none}
+.btn-listen{padding:7px 11px;font-size:.78rem;gap:6px}
+.mini span.ping{outline:2px solid var(--amber);outline-offset:1px}
+.ws-cell.ping{outline:3px solid var(--amber);outline-offset:1px}
+.report-stars .pop{display:inline-block;animation:starOn .42s ease-out both}
+.report-stars .new{animation:newIn .3s ease-out both}
+@keyframes starOn{0%{color:rgba(255,255,255,.2);transform:none}45%{color:var(--amber);transform:scale(1.45)}
+  100%{color:var(--amber);transform:none}}
+@keyframes newIn{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:none}}
+
 @media(prefers-contrast:more){
   :root{--ink-dim:rgba(217,255,246,.9);--ink-faint:rgba(217,255,246,.75);--line:rgba(0,240,255,.5)}
 }
@@ -967,6 +993,8 @@ details[open]>.mixer-head .chev{transform:rotate(180deg)}
     <button type="button" id="badgeButton" class="btn">
      <span class="px-ic" id="badgeBtnIcon" style="color:var(--amber)"></span>배지 도감
      <span id="badgeCount" class="mono">0 / 12</span></button>
+    <button type="button" id="soundButton" class="btn">
+     <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4zM16 9l2.5 3-2.5 3"/></svg>소리 설정</button>
     <div class="chip-toggle" role="group" aria-label="스토리 연출">
      <button type="button" data-story="on" aria-pressed="true">스토리 켜기</button>
      <button type="button" data-story="off" aria-pressed="false">끄기</button>
@@ -988,7 +1016,7 @@ details[open]>.mixer-head .chev{transform:rotate(180deg)}
     <div class="hud-tools">
      <button id="pauseButton" class="btn btn-icon btn-ghost" title="일시정지 (P)" aria-label="일시정지">
       <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg></button>
-     <button id="muteButton" class="btn btn-icon btn-ghost" title="음소거 (M)" aria-label="효과음 끄기" aria-pressed="false">
+     <button id="muteButton" class="btn btn-icon btn-ghost" title="소리 끄기 (M)" aria-label="모든 소리 끄기" aria-pressed="false">
       <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4zM16 9l2.5 3-2.5 3"/></svg></button>
      <button id="restartButton" class="btn btn-icon btn-ghost" title="처음부터 다시" aria-label="처음부터 다시">
       <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11v8h16V6H9"/><path d="M12 3 9 6l3 3"/></svg></button>
@@ -1275,7 +1303,11 @@ details[open]>.mixer-head .chev{transform:rotate(180deg)}
   <div class="modal-cols">
    <div class="mc-left">
     <div class="rep-head">
-     <div id="miniDisplay" class="mini"></div>
+     <div class="rep-mini">
+      <div id="miniDisplay" class="mini"></div>
+      <button type="button" id="miniListen" class="btn btn-listen" hidden>
+       <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17V5l10-2v12"/><path d="M5 15h4v4H5zM15 13h4v4h-4z"/></svg>소리로 듣기</button>
+     </div>
      <div class="rep-sum">
       <p id="modalSummary" style="font-size:1.02rem;font-weight:800;color:#eafff8;line-height:1.5">복원 성공!</p>
       <div class="rep-react">
@@ -1316,6 +1348,8 @@ details[open]>.mixer-head .chev{transform:rotate(180deg)}
    <button id="simpleSecondary" class="btn">처음부터</button>
    <button id="simplePrimary" class="btn btn-primary">계속하기</button>
   </div>
+  <button type="button" id="simpleSound" class="btn btn-ghost simple-sound" hidden>
+   <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4zM16 9l2.5 3-2.5 3"/></svg>소리 설정</button>
  </div>
 </div>
 
@@ -1371,6 +1405,8 @@ details[open]>.mixer-head .chev{transform:rotate(180deg)}
      <div class="ws-tools">
       <button type="button" id="wsClear" class="btn">모두 지우기</button>
       <button type="button" id="wsSample" class="btn">예시 그림</button>
+      <button type="button" id="wsListen" class="btn">
+       <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17V5l10-2v12"/><path d="M5 15h4v4H5zM15 13h4v4h-4z"/></svg>소리로 듣기</button>
      </div>
     </div>
     <div>
@@ -1398,6 +1434,39 @@ details[open]>.mixer-head .chev{transform:rotate(180deg)}
     <button type="button" class="btn" data-sample="bin">하트 (흑백)</button>
     <button type="button" class="btn" data-sample="col">꽃 (컬러)</button>
    </div>
+  </div>
+ </div>
+</div>
+
+<!-- ===================== 소리 설정 ===================== -->
+<div id="soundModal" class="backdrop" role="dialog" aria-modal="true" aria-labelledby="soundTitle">
+ <div class="modal" style="width:min(560px,100%)">
+  <div class="modal-top">
+   <div><p class="kicker">SOUND</p><h2 id="soundTitle">소리 설정</h2></div>
+   <button type="button" class="btn btn-icon btn-ghost modal-x" data-close aria-label="닫기">
+    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  </div>
+  <div class="snd-list">
+   <div class="snd-row"><p class="snd-k">효과음<small>정답·오답·클리어·대사 소리</small></p>
+    <div class="chip-toggle" role="group" aria-label="효과음">
+     <button type="button" data-snd="sfx:1">켜기</button><button type="button" data-snd="sfx:0">끄기</button></div></div>
+   <div class="snd-row"><p class="snd-k">배경음악<small>8비트 칩튠 · 여럿이 함께 할 때는 꺼 두기를 권합니다</small></p>
+    <div class="chip-toggle" role="group" aria-label="배경음악">
+     <button type="button" data-snd="bgm:1">켜기</button><button type="button" data-snd="bgm:0">끄기</button></div></div>
+   <div class="snd-row"><p class="snd-k">음량</p>
+    <div class="chip-toggle" role="group" aria-label="음량">
+     <button type="button" data-snd="vol:1">작게</button><button type="button" data-snd="vol:2">보통</button><button type="button" data-snd="vol:3">크게</button></div></div>
+   <div class="snd-row"><p class="snd-k">교실 모드<small>부드럽고 작은 소리 · 째깍·타자 소리 생략</small></p>
+    <div class="chip-toggle" role="group" aria-label="교실 모드">
+     <button type="button" data-snd="calm:1">켜기</button><button type="button" data-snd="calm:0">끄기</button></div></div>
+   <div class="snd-row" id="vibeRow" hidden><p class="snd-k">진동<small>오답·하트·클리어 때 기기가 떨립니다 (소리를 꺼도 작동)</small></p>
+    <div class="chip-toggle" role="group" aria-label="진동">
+     <button type="button" data-snd="vibe:1">켜기</button><button type="button" data-snd="vibe:0">끄기</button></div></div>
+  </div>
+  <div class="snd-foot">
+   <button type="button" id="sndTest" class="btn">
+    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4zM16 9l2.5 3-2.5 3"/></svg>소리 들어 보기</button>
+   <p class="ref-note">설정은 이 기기의 브라우저에 저장됩니다. 게임 화면 오른쪽 위 스피커 버튼(M 키)을 누르면 모든 소리가 한 번에 꺼집니다.</p>
   </div>
  </div>
 </div>
@@ -1642,7 +1711,6 @@ function applyStageSet(includeKernel) {
    3. 상태
    ========================================================================= */
 const S = {
-  soundOn: true,
   round: -1, score: 0, paused: false, running: false,
   results: [],
   timeTotal: 0, timeLeft: 0, deadline: 0, rafId: null, lastShown: -1,
@@ -1668,46 +1736,490 @@ const S = {
 };
 
 /* =========================================================================
-   4. 사운드
+   4. 사운드 — 음원 파일 없이 Web Audio 로 그 자리에서 합성한다 (오프라인 · 파일 크기 그대로)
+   =========================================================================
+   · 설정 META.sound (기기에 저장) : sfx 효과음 · bgm 배경음악(기본 꺼짐) · vol 음량 1 작게 / 2 보통 / 3 크게
+                                    · calm 교실 모드 · vibe 진동(지원하는 기기만)
+   · 교실 모드 : 네모파·톱니파를 부드러운 삼각파로 바꾸고, 지직 잡음과 반복음(째깍·타자 소리)은 뺀다.
+   · 소리 흐름 : 효과음 → fx ───────────────────────┐
+                 배경음악 → 곡마다 새 gain → bgmBus ──┴→ master(음량) → 리미터 → 스피커
+   · 숫자를 듣는 소리(밝기 → 음높이, R·G·B → 도·미·솔 세 음의 크기)는 답을 고른 '뒤'에만 낸다.
+     고르기 전에 들려주면 숫자를 읽지 않고 귀로 맞힐 수 있기 때문이다.
    ========================================================================= */
+const N = m => 440 * Math.pow(2, (m - 69) / 12);                       /* MIDI 음 번호 → 주파수 (69 = 라 440Hz) */
+const pitchOf = v => 220 * Math.pow(8, clamp(v, 0, 255) / 255);        /* 값 0 → 220Hz … 255 → 1760Hz (세 옥타브) */
+const jit = () => 1 + (Math.random() - 0.5) * 0.03;                    /* 같은 소리가 반복돼도 덜 지루하게 ±1.5% */
+const VOL = [0, 0.5, 1, 1.7];                                          /* 음량 : 1 작게 · 2 보통 · 3 크게 */
+const LADDER = [0, 2, 4, 5, 7, 9, 11, 12];                             /* 연속 정답 사다리 : 도레미파솔라시도 */
+const PIC_NOTES = [81, 79, 76, 74, 72];                                /* 이진 그림 연주 : 위 행부터 라·솔·미·레·도 */
+const PAINT_NOTES = [88, 60, 72, 74, 67, 81, 79, 76];                  /* 팔레트 8색 : 밝은 색은 높게, 검정은 낮게 */
+const snd = () => META.sound;
 const sfx = {
-  ctx: null, lastTick: 0,
+  ctx: null, master: null, fx: null, bgmBus: null, nb: null, waves: {},
+  lastTick: 0, lastTalk: 0, lastPaint: 0, streak: 0,
+  /** 브라우저는 사용자가 화면을 누르기 전에는 소리를 막으므로, 첫 터치 때 오디오를 만든다 */
   init() {
-    if (this.ctx) { if (this.ctx.state === "suspended") this.ctx.resume(); return; }
+    if (this.ctx) { if (this.ctx.state === "suspended" && !document.hidden) this.visible(true); return; }
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
-    try { this.ctx = new AC(); } catch (e) { this.ctx = null; }
-  },
-  tone(freq, type, dur, vol) {
-    if (!this.ctx || !S.soundOn) return;
-    if (this.ctx.state === "suspended") this.ctx.resume();
     try {
-      const t = this.ctx.currentTime;
-      const osc = this.ctx.createOscillator(), g = this.ctx.createGain();
-      osc.type = type; osc.frequency.setValueAtTime(freq, t);
-      g.gain.setValueAtTime(vol, t);
-      g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-      osc.connect(g); g.connect(this.ctx.destination);
-      osc.start(t); osc.stop(t + dur);
+      const c = new AC();
+      const lim = c.createDynamicsCompressor();          /* '크게'에서 소리가 겹쳐도 찢어지지 않게 */
+      lim.threshold.value = -10; lim.knee.value = 8; lim.ratio.value = 8;
+      lim.attack.value = 0.002; lim.release.value = 0.2;
+      lim.connect(c.destination);
+      this.master = c.createGain(); this.master.connect(lim);
+      this.fx = c.createGain(); this.fx.connect(this.master);
+      this.bgmBus = c.createGain(); this.bgmBus.connect(this.master);
+      this.ctx = c;
+    } catch (e) { this.ctx = null; return; }
+    this.apply();
+    bgm.sync();
+  },
+  /** 음량·교실 모드 설정을 소리 흐름에 반영 */
+  apply() {
+    if (!this.ctx) return;
+    const s = snd(), t = this.ctx.currentTime;
+    this.master.gain.setTargetAtTime(VOL[s.vol] || 1, t, 0.02);
+    this.fx.gain.setTargetAtTime(s.calm ? 0.8 : 1, t, 0.02);
+    this.bgmBus.gain.setTargetAtTime(s.calm ? 0.3 : 0.5, t, 0.02);
+  },
+  /** 탭이 가려지면 오디오 시계를 세우고, 돌아오면 다시 돌린다 */
+  visible(on) {
+    const c = this.ctx; if (!c) return;
+    try { const p = on ? c.resume() : c.suspend(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* 무시 */ }
+  },
+  on() { return !!this.ctx && snd().sfx; },
+  calm() { return !!snd().calm; },
+  /** 진동 — 지원하는 기기만. 소리를 꺼도 진동은 따로 움직인다 (조용한 교실용) */
+  buzz(p) { if (snd().vibe && navigator.vibrate) { try { navigator.vibrate(p); } catch (e) { /* 무시 */ } } },
+  /** 8비트 게임기의 좁은 네모파 (duty 12.5% · 25%) */
+  wave(duty) {
+    if (!this.waves[duty]) {
+      const n = 32, re = new Float32Array(n), im = new Float32Array(n);
+      for (let k = 1; k < n; k++) re[k] = 2 / (k * Math.PI) * Math.sin(k * Math.PI * duty);
+      this.waves[duty] = this.ctx.createPeriodicWave(re, im);
+    }
+    return this.waves[duty];
+  },
+  /** 음 하나를 오디오 시각 t 에. f → f2 로 미끄러질 수 있고, sus 면 끝 무렵까지 소리를 끌고 간다(배경음악용) */
+  toneAt(t, f, type, d, v, f2, out, sus) {
+    const c = this.ctx; if (!c) return;
+    try {
+      const calm = this.calm(), ty = calm ? (type === "sine" ? "sine" : "triangle") : type;
+      const o = c.createOscillator(), g = c.createGain(), a = calm ? 0.012 : 0.004, vv = Math.max(v, 0.0002);
+      if (ty === "p12" || ty === "p25") o.setPeriodicWave(this.wave(ty === "p12" ? 0.125 : 0.25));
+      else o.type = ty;
+      o.frequency.setValueAtTime(f, t);
+      if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + d);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vv, t + a);
+      if (sus) g.gain.setValueAtTime(vv, t + Math.max(a, d * 0.6));
+      g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+      o.connect(g); g.connect(out || this.fx);
+      o.start(t); o.stop(t + d + 0.03);
     } catch (e) { /* 오디오 실패가 게임을 막지 않도록 */ }
   },
-  click() { this.tone(760, "square", 0.045, 0.03); },
-  /** 슬라이더 드래그마다 오실레이터가 쌓이지 않도록 70ms 스로틀 */
-  tick() {
+  /** 지금부터 at 초 뒤에 음 하나 */
+  tone(f, type, d, v, at, f2) { if (this.ctx) this.toneAt(this.ctx.currentTime + 0.005 + (at || 0), f, type, d, v, f2); },
+  /** 걸러 낸 잡음 : 타격·지직·하이햇 (교실 모드에서는 내지 않는다) */
+  noiseAt(t, d, v, freq, kind, out) {
+    const c = this.ctx; if (!c || this.calm()) return;
+    try {
+      if (!this.nb) {
+        this.nb = c.createBuffer(1, c.sampleRate, c.sampleRate);
+        const a = this.nb.getChannelData(0);
+        for (let i = 0; i < a.length; i++) a[i] = Math.random() * 2 - 1;
+      }
+      const s = c.createBufferSource(), fl = c.createBiquadFilter(), g = c.createGain();
+      s.buffer = this.nb; fl.type = kind || "bandpass"; fl.frequency.value = freq || 1500;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(v, t + 0.003);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+      s.connect(fl); fl.connect(g); g.connect(out || this.fx);
+      s.start(t, Math.random() * 0.4); s.stop(t + d + 0.03);
+    } catch (e) { /* 무시 */ }
+  },
+  noise(d, v, at, freq, kind) { if (this.ctx) this.noiseAt(this.ctx.currentTime + 0.005 + (at || 0), d, v, freq, kind); },
+
+  /* ---------- 조작 ---------- */
+  click() { if (!this.on()) return; const j = jit(); this.tone(N(84) * j, "p25", 0.045, 0.03, 0, N(81) * j); },
+  /** 슬라이더 : 값(0~255)을 주면 클수록 높은 소리 — 숫자의 크기를 귀로도 느낀다. 70ms 스로틀, 교실 모드는 생략 */
+  tick(v) {
+    if (!this.on() || this.calm()) return;
     const now = performance.now();
     if (now - this.lastTick < 70) return;
     this.lastTick = now;
-    this.tone(520, "square", 0.03, 0.018);
+    if (v == null) this.tone(N(76) * jit(), "p12", 0.03, 0.018);
+    else this.tone(pitchOf(v), "triangle", 0.05, 0.05);
   },
-  good() { this.tone(620, "sine", 0.1, 0.09); setTimeout(() => this.tone(880, "sine", 0.14, 0.08), 95); },
-  bad()  { this.tone(150, "sawtooth", 0.26, 0.08); },
-  clear() { [523.25, 659.25, 783.99, 1046.5].forEach((f, i) =>
-    setTimeout(() => this.tone(f, "square", 0.2, 0.05), i * 140)); },
-  fail() { [440, 370, 294].forEach((f, i) => setTimeout(() => this.tone(f, "triangle", 0.25, 0.06), i * 150)); },
-  /** 클리어 도장이 찍히는 '쿵' */
-  stamp() { this.tone(98, "square", 0.2, 0.09); setTimeout(() => this.tone(196, "triangle", 0.16, 0.06), 30); },
-  /** 배지 획득 반짝임 */
-  badge() { [784, 988, 1319].forEach((f, i) => setTimeout(() => this.tone(f, "triangle", 0.16, 0.06), i * 90)); }
+  /** 감점 없는 헛탭 (좌표 오탭 · 잠긴 모드 · 색을 안 고른 채 칠하기) — 낮게 '뚱뚱' */
+  nope() { if (!this.on()) return; this.tone(N(57), "p25", 0.05, 0.03); this.tone(N(53), "p25", 0.08, 0.03, 0.06); },
+  /** 최종 단계에서 좌표를 맞게 찾음 : 조준 완료 '삑삑' */
+  lock() { if (!this.on()) return; this.tone(N(88), "p25", 0.04, 0.03); this.tone(N(95), "p25", 0.07, 0.03, 0.05); },
+  pause(on) { if (!this.on()) return; (on ? [79, 72] : [72, 79]).forEach((m, i) => this.tone(N(m), "p25", 0.06, 0.03, i * 0.07)); },
+  hint() {
+    if (!this.on()) return;
+    [91, 88, 84].forEach((m, i) => this.tone(N(m), "triangle", 0.2, 0.045, i * 0.07));
+    this.noise(0.18, 0.015, 0, 6000, "highpass");
+  },
+
+  /* ---------- 정답 · 오답 · 클리어 ---------- */
+  /** 정답 '띠링' — 연달아 맞히면 도레미파솔라시도로 한 칸씩 올라간다 (소리만, 점수는 그대로). flat = 사다리 없이 */
+  good(flat) {
+    const step = flat ? 0 : LADDER[Math.min(this.streak, LADDER.length - 1)];
+    if (!flat) this.streak++;
+    if (!this.on()) return;
+    const b = N(79 + step) * jit();
+    if (this.calm()) { this.tone(b, "sine", 0.12, 0.05); this.tone(b * 1.335, "sine", 0.18, 0.045, 0.1); return; }
+    this.tone(b, "square", 0.06, 0.045);
+    this.tone(b * 1.5, "square", 0.11, 0.04, 0.055);
+    this.noise(0.04, 0.025, 0.055, 7000, "highpass");
+  },
+  bad() {
+    this.streak = 0; this.buzz(45);
+    if (!this.on()) return;
+    if (this.calm()) { this.tone(N(55), "sine", 0.22, 0.06, 0, N(50)); return; }
+    this.tone(196, "square", 0.09, 0.05, 0, 160);
+    this.tone(147, "square", 0.2, 0.05, 0.09, 98);
+    this.noise(0.12, 0.05, 0, 500, "lowpass");
+  },
+  /** 단계 클리어 팡파르. bits(이진 그림)를 주면 반짝임 뒤에 복원한 그림을 악보처럼 연주한다 */
+  clear(bits) {
+    this.streak = 0; this.buzz([30, 40, 30, 40, 90]);
+    if (!this.on()) return;
+    if (bits) {
+      [84, 91].forEach((m, i) => this.tone(N(m), "triangle", 0.16, 0.04, i * 0.06));
+      this.picture(bits, 5, 0.36, 0.22);
+      return;
+    }
+    [72, 76, 79, 84, 88].forEach((m, i) => this.tone(N(m), "square", 0.09, 0.045, i * 0.07));
+    this.tone(N(91), "square", 0.3, 0.04, 0.36);
+    [96, 100, 103].forEach((m, i) => this.tone(N(m), "triangle", 0.2, 0.03, 0.5 + i * 0.06));
+  },
+  /** 클리어 도장이 '쿵' */
+  stamp() {
+    if (!this.on()) return;
+    this.noise(0.22, 0.12, 0, 180, "lowpass");
+    this.tone(110, "sine", 0.3, 0.2, 0, 45);
+    this.tone(98, "square", 0.12, 0.05, 0, 60);
+  },
+  /** 시간 초과 · 실패 · 게임 오버 : '빠-빠-빠-빠아암' */
+  fail() {
+    this.streak = 0; this.buzz([120, 60, 200]);
+    if (!this.on()) return;
+    [67, 66, 65].forEach((m, i) => this.tone(N(m), "p25", 0.16, 0.045, i * 0.18, N(m) * 0.97));
+    this.tone(N(64), "p25", 0.6, 0.045, 0.54, N(59));
+    this.noise(0.45, 0.03, 0.54, 400, "lowpass");
+  },
+  badge() {
+    if (!this.on()) return;
+    [84, 88, 91, 96].forEach((m, i) => this.tone(N(m), "p25", 0.07, 0.03, i * 0.06));
+    [96, 100, 103].forEach((m, i) => this.tone(N(m), "triangle", 0.25, 0.03, 0.26 + i * 0.05));
+    this.noise(0.06, 0.02, 0.26, 8000, "highpass");
+  },
+  /** 리포트의 별이 하나씩 켜질 때마다 '딩' — 별이 많을수록 높게 */
+  stars(n, from, delay) {
+    if (!this.on()) return;
+    for (let i = from || 0; i < n; i++) {
+      const at = (delay || 0) + (i - (from || 0)) * 0.28, m = [88, 91, 96][i];
+      this.tone(N(m), "triangle", 0.35, 0.06, at);
+      this.tone(N(m + 12), "sine", 0.2, 0.02, at + 0.02);
+    }
+  },
+  /** 남은 시간이 적을 때 초마다 : 마지막 3초는 더 높고 급한 '째깍째깍'. 교실 모드는 처음 한 번만 부드럽게 */
+  countdown(secs, first) {
+    if (!this.on()) return;
+    if (this.calm()) { if (first) this.tone(N(76), "sine", 0.14, 0.04); return; }
+    if (secs <= 3) { this.tone(N(88), "p25", 0.05, 0.03); this.tone(N(88), "p25", 0.05, 0.025, 0.12); }
+    else this.tone(N(81), "p25", 0.05, 0.02);
+  },
+
+  /* ---------- 장면별 소리 ---------- */
+  /** 대사 타자 소리 : 수탐이는 맑은 '삐빅', 해커는 낮고 지직거리는 소리 (교실 모드는 생략) */
+  talk(who) {
+    if (!this.on() || this.calm()) return;
+    const now = performance.now();
+    if (now - this.lastTalk < 55) return;
+    this.lastTalk = now;
+    if (who === "gl") {
+      this.tone(110 + Math.random() * 90, "sawtooth", 0.045, 0.04);
+      if (Math.random() < 0.34) this.noise(0.03, 0.03, 0, 2500);
+    } else this.tone(880 + Math.random() * 380, "p25", 0.028, 0.022);
+  },
+  /** 대사가 바뀔 때 : 수탐이는 '뾰롱', 해커는 '지지직' 하며 끼어든다 */
+  line(who) {
+    if (!this.on()) return;
+    if (who === "gl") { this.noise(0.14, 0.05, 0, 1800); this.tone(520, "sawtooth", 0.14, 0.035, 0, 130); }
+    else this.tone(N(81), "p25", 0.06, 0.03, 0, N(88));
+  },
+  /** 보스 타격 '퍽' */
+  hit() {
+    this.buzz(25);
+    if (!this.on()) return;
+    this.noise(0.14, 0.12, 0, 900);
+    this.tone(320, "square", 0.18, 0.07, 0, 70);
+    this.tone(90, "sine", 0.22, 0.16, 0.02, 40);
+  },
+  /** 해커의 '크크크' (오답 소리 바로 뒤에) */
+  laugh() {
+    if (!this.on()) return;
+    [0, 0.15, 0.3].forEach((a, i) => {
+      this.tone(330 - i * 30, "sawtooth", 0.09, 0.045, 0.24 + a, 270 - i * 30);
+      this.noise(0.05, 0.03, 0.24 + a, 3000);
+    });
+  },
+  /** 해커의 도발 (첫 암호 패킷) — 지직거리는 말소리 */
+  taunt() {
+    if (!this.on() || this.calm()) return;
+    for (let i = 0; i < 7; i++) {
+      const a = i * 0.07 + Math.random() * 0.02;
+      this.tone(110 + Math.random() * 90, "sawtooth", 0.045, 0.045, a);
+      if (i % 3 === 0) this.noise(0.03, 0.035, a, 2500);
+    }
+  },
+  /** 보스 격파 : 큰 폭발 + 승리 팡파르 */
+  bossDown() {
+    this.streak = 0; this.buzz([40, 30, 40, 30, 220]);
+    if (!this.on()) return;
+    this.noise(0.6, 0.14, 0, 900, "lowpass");
+    this.noise(0.25, 0.06, 0, 2600);
+    this.tone(420, "sawtooth", 0.5, 0.05, 0, 40);
+    this.tone(80, "sine", 0.5, 0.2, 0.02, 30);
+    [72, 76, 79, 84].forEach((m, i) => this.tone(N(m), "square", 0.1, 0.045, 0.5 + i * 0.09));
+    [79, 84, 88].forEach(m => this.tone(N(m), m === 88 ? "square" : "triangle", 0.5, 0.04, 0.86));
+  },
+  /** 서바이벌 : 하트가 깨지는 소리 (마지막 하트면 진동이 더 길다) */
+  heart(last) {
+    this.streak = 0; this.buzz(last ? [90, 50, 90, 50, 180] : [70, 40, 70]);
+    if (!this.on()) return;
+    this.tone(147, "square", 0.1, 0.04, 0, 110);
+    this.tone(N(81), "triangle", 0.1, 0.08, 0.1);
+    this.tone(N(76), "triangle", 0.16, 0.08, 0.19, N(64));
+    this.noise(0.1, 0.05, 0.2, 4000, "highpass");
+  },
+  /** 서바이벌 레벨 업 팡파르 */
+  levelUp(at) {
+    if (!this.on()) return;
+    const a = at || 0;
+    [67, 69, 71, 72, 74, 76, 79].forEach((m, i) => this.tone(N(m), "square", 0.06, 0.04, a + i * 0.045));
+    [72, 76, 79, 84].forEach(m => this.tone(N(m), "triangle", 0.5, 0.035, a + 0.34));
+  },
+  /** 최고 기록 경신 */
+  record(at) {
+    if (!this.on()) return;
+    const a = at || 0;
+    [79, 83, 86, 91].forEach((m, i) => this.tone(N(m), "square", 0.08, 0.04, a + i * 0.08));
+    this.tone(N(95), "square", 0.4, 0.04, a + 0.34); this.tone(N(91), "triangle", 0.45, 0.04, a + 0.34);
+    for (let i = 0; i < 4; i++) this.tone(N(i % 2 ? 103 : 100), "triangle", 0.1, 0.02, a + 0.52 + i * 0.07);
+  },
+  /** 새 모드 해금 : 문이 열리듯 미끄러져 오른 뒤 종소리 */
+  unlock(at) {
+    if (!this.on()) return;
+    const a = at || 0;
+    this.tone(N(60), "p25", 0.5, 0.035, a, N(84));
+    this.noise(0.5, 0.025, a, 3000);
+    [84, 91, 96].forEach((m, i) => this.tone(N(m), "triangle", 0.5, 0.045, a + 0.5 + i * 0.12));
+  },
+  /** 공방 : 칠할 때 색마다 다른 높이의 '톡' (흑백 그림은 켤 때 높게, 끌 때 낮게) */
+  paint(k, bin) {
+    if (!this.on()) return;
+    const now = performance.now();
+    if (now - this.lastPaint < 45) return;
+    this.lastPaint = now;
+    this.tone(N(bin ? (k ? 79 : 67) : (PAINT_NOTES[k] || 72)), "triangle", 0.08, 0.07);
+    this.noise(0.015, 0.04, 0, 5000, "highpass");
+  },
+  /** 공방 : 문제 코드가 만들어질 때 — 코드 글자를 '데이터 전송음'으로 들려준 뒤 '딩동' */
+  code(str) {
+    if (!this.on()) return;
+    const s = String(str || "").replace(/[^0-9A-Z]/gi, "").toUpperCase().slice(0, 12);
+    for (let i = 0; i < s.length; i++) this.tone(N(72 + (parseInt(s.charAt(i), 36) % 12) * 2), "p12", 0.045, 0.03, i * 0.055);
+    const end = s.length * 0.055 + 0.05;
+    this.tone(N(84), "triangle", 0.3, 0.05, end);
+    this.tone(N(91), "triangle", 0.4, 0.045, end + 0.08);
+  },
+
+  /* ---------- 숫자를 듣는 소리 (답을 고른 뒤에만) ---------- */
+  /** 밝기 값 → 음높이 */
+  level(v, at, d) { if (this.on()) this.tone(pitchOf(v), "triangle", d || 0.28, 0.07, at || 0); },
+  /** [R, G, B] → 도·미·솔 세 음. 값이 클수록 그 음이 크다 (흰색 = 꽉 찬 화음, 검정 = 고요) */
+  mix(rgb, at, d) {
+    if (!this.on()) return;
+    [72, 76, 79].forEach((m, ch) => { if (rgb[ch] > 4) this.tone(N(m), "triangle", d || 0.5, 0.008 + rgb[ch] / 255 * 0.06, at || 0); });
+  },
+  /** 이진 그림을 악보처럼 : 세로줄 하나 = 한 박자, 위 행일수록 높은 음, 1인 칸만 소리 난다 */
+  picture(bits, n, at, gap) {
+    if (!this.on()) return;
+    for (let c = 0; c < n; c++) {
+      const rows = [];
+      for (let r = 0; r < n; r++) if (bits[r * n + c]) rows.push(r);
+      const v = 0.07 / Math.sqrt(Math.max(1, rows.length));      /* 한 박자에 음이 많으면 하나하나는 작게 */
+      rows.forEach(r => this.tone(N(PIC_NOTES[r] || 72), "triangle", 0.32, v, (at || 0) + c * (gap || 0.24)));
+    }
+  },
+  /** 역방향 해독 : 전송할 때 채널마다 한 음 — 맞으면 맑은 '딩', 더 커야 하면 올라가는 소리, 작아야 하면 내려가는 소리.
+      많이 어긋날수록 거친 소리. 값을 보낸 뒤에만 울리므로 정답을 미리 알려 주지 않는다 */
+  warmer(diffs, oks) {
+    this.streak = 0; this.buzz(45);
+    if (!this.on()) return;
+    diffs.forEach((d, i) => {
+      const at = i * 0.14;
+      if (oks[i]) this.tone(N(88), "triangle", 0.16, 0.06, at);
+      else this.tone(N(d > 0 ? 64 : 71), Math.abs(d) > 60 ? "square" : "p25", 0.12, 0.035, at, N(d > 0 ? 71 : 64));
+    });
+  },
+  /** 소리 설정의 '소리 들어 보기' */
+  demo() {
+    if (!this.on()) return;
+    this.streak = 0;
+    this.good(); setTimeout(() => this.good(), 240); setTimeout(() => this.good(), 480);
+    setTimeout(() => this.bad(), 860);
+    setTimeout(() => this.stars(3, 0, 0), 1250);
+  }
+};
+
+/* ---- 칩튠 배경음악 ----
+   곡은 8분음표 칸의 나열로 적는다 : 음 이름(C5, G#4 …) · 쉼표 "." · 앞 음 늘이기 "-" · 마디 구분 "|"(읽을 때 무시)
+   drum 은 한 칸에 한 글자 (한 마디만 적으면 되풀이) : k 킥 · s 스네어 · h 하이햇 · K 킥+하이햇 · . 쉼
+   arp 는 마디마다의 화음 — 16분음표로 화음을 오르내리는 8비트식 반주 */
+const SONGS = {
+  /* 시작 화면 : 조금 신비로운 탐정 분위기 (가단조, 느리게) */
+  title: { bpm: 96, lead: "triangle", lv: 0.09,
+    melody: "E5 - - - A5 - G5 E5 | F5 - - - E5 - C5 - | E5 - - - G5 - E5 C5 | D5 - - - - - . . |" +
+            "E5 - - - A5 - B5 C6 | A5 - - - G5 - F5 - | F5 - E5 - D5 - C5 - | B4 - - - G#4 - - .",
+    bass:   "A2 - - - E3 - - - | F2 - - - C3 - - - | C3 - - - G2 - - - | G2 - - - D3 - - - |" +
+            "A2 - - - E3 - - - | F2 - - - C3 - - - | D3 - - - A2 - - - | E2 - - - B2 - - -",
+    arp: "Am F C G Am F Dm E", drum: "k.h.k.h." },
+  /* 단계 : 밝고 경쾌하게 (다장조) — 단계가 오를수록 조를 조금씩 올린다 */
+  stage: { bpm: 128, lead: "p25", lv: 0.05,
+    melody: "E5 . G5 E5 D5 . C5 . | A4 . C5 E5 D5 C5 . . | F5 . A5 F5 E5 . C5 . | D5 . G5 . B4 . D5 . |" +
+            "G5 . E5 G5 C6 . G5 . | A5 . G5 E5 C5 . E5 . | F5 . A5 . C6 . A5 F5 | G5 . F5 . D5 . B4 .",
+    bass:   "C3 C4 C3 C4 C3 C4 C3 C4 | A2 A3 A2 A3 A2 A3 A2 A3 | F2 F3 F2 F3 F2 F3 F2 F3 | G2 G3 G2 G3 G2 G3 G2 G3 |" +
+            "C3 C4 C3 C4 C3 C4 C3 C4 | A2 A3 A2 A3 A2 A3 A2 A3 | F2 F3 F2 F3 F2 F3 F2 F3 | G2 G3 G2 G3 G2 G3 G2 G3",
+    drum: "kh.hkhsh" },
+  /* 보스전 : 빠르고 긴박하게 (가단조) */
+  boss: { bpm: 152, lead: "square", lv: 0.04,
+    melody: "A4 A4 . C5 . E5 D#5 E5 | F5 . E5 . D5 . C5 . | B4 . G#4 . E4 . G#4 B4 | A4 . . . E5 . A5 . |" +
+            "D5 . F5 . A5 . F5 D5 | E5 . C5 . A4 . C5 E5 | F5 . E5 . D5 . C5 B4 | G#4 - B4 - D5 - E5 .",
+    bass:   "A2 A2 A3 A2 A2 A3 A2 A3 | F2 F2 F3 F2 F2 F3 F2 F3 | E2 E2 E3 E2 E2 E3 E2 E3 | A2 A2 A3 A2 A2 A3 A2 A3 |" +
+            "D2 D2 D3 D2 D2 D3 D2 D3 | A2 A2 A3 A2 A2 A3 A2 A3 | F2 F2 F3 F2 F2 F3 F2 F3 | E2 E2 E3 E2 E2 E3 E2 E3",
+    drum: "khshkKsh" },
+  /* 엔딩 : 승리의 행진 (다장조) */
+  ending: { bpm: 132, lead: "p25", lv: 0.05,
+    melody: "C5 . E5 . G5 . C6 . | B5 . G5 . D5 . G5 . | A5 . E5 . C5 . E5 . | F5 . A5 . C6 - - . |" +
+            "E5 G5 C6 . G5 . E5 . | D5 G5 B5 . G5 . D5 . | C5 F5 A5 . C6 . A5 . | B5 - - . D6 - - .",
+    bass:   "C3 C4 C3 C4 C3 C4 C3 C4 | G2 G3 G2 G3 G2 G3 G2 G3 | A2 A3 A2 A3 A2 A3 A2 A3 | F2 F3 F2 F3 F2 F3 F2 F3 |" +
+            "C3 C4 C3 C4 C3 C4 C3 C4 | G2 G3 G2 G3 G2 G3 G2 G3 | F2 F3 F2 F3 F2 F3 F2 F3 | G2 G3 G2 G3 G2 G3 G2 G3",
+    arp: "C G Am F C G F G", drum: "khshkhsh" }
+};
+function noteNo(t) {
+  const m = /^([A-G])([#b]?)(\d)$/.exec(t);
+  if (!m) return 0;
+  return 12 * (+m[3] + 1) + { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }[m[1]] + (m[2] === "#" ? 1 : m[2] === "b" ? -1 : 0);
+}
+/** "E5 - . G5" → 칸마다 { m: 음 번호(쉼표·늘임 칸은 0), len: 늘인 칸 수 } */
+function parseTrack(str) {
+  const out = String(str || "").split(/[\s|]+/).filter(Boolean)
+    .map(t => ({ m: noteNo(t), len: 1, tie: t === "-" }));
+  out.forEach((s, i) => { if (s.m) while (out[i + s.len] && out[i + s.len].tie) s.len++; });
+  return out;
+}
+function chordTones(name) {
+  const m = /^([A-G][#b]?)(m?)$/.exec(name) || ["", "C", ""];
+  const r = noteNo(m[1] + "4");
+  return [r, r + (m[2] ? 3 : 4), r + 7, r + 12];
+}
+function compileSong(s) {
+  if (!s._c) s._c = { lead: parseTrack(s.melody), bass: parseTrack(s.bass), drum: (s.drum || "").replace(/[\s|]/g, ""),
+                      arp: s.arp ? s.arp.split(/\s+/).filter(Boolean).map(chordTones) : null };
+  return s._c;
+}
+const bgm = {
+  want: "", wantTr: 0, key: "", tr: 0, rate: 1, held: false, memo: null,
+  song: null, c: null, out: null, step: 0, next: 0, timer: null,
+  /** 지금 장면의 곡을 정한다. 배경음악이 꺼져 있어도 기억해 두었다가, 켜는 순간 이 곡이 흐른다 (tr = 조 옮김) */
+  set(key, tr) {
+    this.want = key || ""; this.wantTr = tr || 0;
+    this.held = false; this.memo = null; this.rate = 1;
+    this.sync();
+  },
+  /** 일시정지 동안 멈췄다가, 풀리면 멈춘 자리부터 이어서 */
+  hold(on) {
+    if (on === this.held) return;
+    if (on && this.timer) this.memo = { key: this.key, tr: this.tr, step: this.step };
+    this.held = on;
+    this.sync();
+  },
+  sync() {
+    const ok = !!(sfx.ctx && snd().bgm && !this.held && SONGS[this.want]);
+    if (!ok) { this.stop(); return; }
+    if (this.timer && this.key === this.want && this.tr === this.wantTr) return;   /* 이미 그 곡이 흐르는 중 */
+    this.start();
+  },
+  start() {
+    this.stop();
+    const c = sfx.ctx, m = this.memo;
+    this.key = this.want; this.tr = this.wantTr;
+    this.song = SONGS[this.key]; this.c = compileSong(this.song);
+    this.step = (m && m.key === this.key && m.tr === this.tr) ? m.step : 0;
+    this.memo = null;
+    this.out = c.createGain();
+    this.out.gain.setValueAtTime(0.0001, c.currentTime);
+    this.out.gain.exponentialRampToValueAtTime(1, c.currentTime + 0.6);
+    this.out.connect(sfx.bgmBus);
+    this.next = c.currentTime + 0.08;
+    this.pump();
+  },
+  stop() {
+    clearTimeout(this.timer); this.timer = null; this.key = "";
+    const o = this.out, c = sfx.ctx; this.out = null;
+    if (!o || !c) return;
+    try {
+      const t = c.currentTime;
+      o.gain.cancelScheduledValues(t); o.gain.setValueAtTime(o.gain.value, t); o.gain.linearRampToValueAtTime(0, t + 0.15);
+    } catch (e) { /* 무시 */ }
+    setTimeout(() => { try { o.disconnect(); } catch (e) { /* 무시 */ } }, 700);
+  },
+  /** 0.3초 앞까지 음을 미리 예약한다 — 타이머가 조금 늦게 깨어나도 박자가 흔들리지 않게 */
+  pump() {
+    const c = sfx.ctx; if (!c || !this.out) return;
+    if (this.next < c.currentTime) this.next = c.currentTime + 0.03;     /* 오래 멈췄다 돌아오면 밀린 음을 한꺼번에 치지 않는다 */
+    while (this.next < c.currentTime + 0.3) {
+      const sd = 60 / (this.song.bpm * this.rate) / 2;                   /* 8분음표 한 칸의 길이(초) */
+      this.playStep(this.step % this.c.lead.length, this.next, sd);
+      this.next += sd; this.step++;
+    }
+    this.timer = setTimeout(() => this.pump(), 90);
+  },
+  playStep(i, t, sd) {
+    const c = this.c, s = this.song, out = this.out, tr = this.tr;
+    const L = c.lead[i], B = c.bass[i];
+    if (L && L.m) sfx.toneAt(t, N(L.m + tr), s.lead, sd * L.len * 0.92, s.lv || 0.05, 0, out, true);
+    if (B && B.m) sfx.toneAt(t, N(B.m + tr), "triangle", sd * B.len * 0.95, 0.13, 0, out, true);
+    if (c.arp) {
+      const ch = c.arp[Math.floor(i / 8) % c.arp.length];
+      for (let q = 0; q < 2; q++) sfx.toneAt(t + q * sd / 2, N(ch[(i * 2 + q) % 4] + tr), "p12", sd * 0.4, 0.02, 0, out);
+    }
+    const d = c.drum.charAt(i % (c.drum.length || 1));
+    if (d === "k" || d === "K") sfx.toneAt(t, 150, "sine", 0.14, 0.26, 45, out);
+    if (d === "s") { sfx.noiseAt(t, 0.1, 0.08, 1800, "bandpass", out); sfx.toneAt(t, 190, "triangle", 0.06, 0.05, 120, out); }
+    if (d === "h" || d === "K") sfx.noiseAt(t, 0.035, 0.035, 8000, "highpass", out);
+  },
+  /** 빠르기 배율 (남은 시간이 10초 아래면 1.18배, 서바이벌은 레벨마다 조금씩) */
+  tempo(r) { this.rate = r; },
+  /** 효과음·그림 연주가 잘 들리도록 sec 초 동안 배경음악을 작게 */
+  duck(sec) {
+    const c = sfx.ctx, o = this.out; if (!c || !o || !sfx.on()) return;
+    try {
+      const t = c.currentTime;
+      o.gain.cancelScheduledValues(t);
+      o.gain.setValueAtTime(Math.max(0.0001, o.gain.value), t);
+      o.gain.linearRampToValueAtTime(0.2, t + 0.08);
+      o.gain.setValueAtTime(0.2, t + sec);
+      o.gain.linearRampToValueAtTime(1, t + sec + 0.7);
+    } catch (e) { /* 무시 */ }
+  }
 };
 
 
@@ -1916,10 +2428,11 @@ function paintTime() {
   if (secs !== S.lastShown) {
     S.lastShown = secs;
     txt.textContent = secs + "초";
-    const danger = secs <= (S.mode === "survival" ? 3 : 10) && secs > 0;
+    const lim = S.mode === "survival" ? 3 : 10, danger = secs <= lim && secs > 0;
     fill.classList.toggle("danger", danger);
     txt.classList.toggle("text-danger", danger);
-    if (danger && S.soundOn) sfx.tone(880, "square", 0.05, 0.02);
+    if (danger && S.running) sfx.countdown(secs, secs === lim);
+    if (S.mode !== "survival") bgm.tempo(danger ? 1.18 : 1);     /* 10초 남으면 배경음악도 빨라진다 */
   }
 }
 /** 스토리 대화가 끝날 때까지 시계는 멈춘 채 새 단계의 제한 시간만 미리 보여 준다 */
@@ -1930,7 +2443,7 @@ function presetTime(seconds) {
 }
 function onTimeUp() {
   if (S.mode === "survival") { survAnswer(false, null, "시간 초과"); return; }
-  S.running = false; sfx.fail();
+  S.running = false; sfx.fail(); bgm.set("");
   if (S.mode === "practice") {
     showSimple("시간 초과", "제한 시간 안에 복원하지 못했습니다. 다시 도전하면 새 문제가 나옵니다.",
       "이 단계 다시", "단계 선택으로", () => startRound(S.round), () => { goHome(); openPractice(); }, "A10");
@@ -2205,7 +2718,7 @@ function tryGray(val, btn) {
     toast("밝기 " + t.v + " 복원 완료!", "good");
     S.gray.idx++;
     if (S.gray.idx >= S.puzzle.targets.length) { renderGray(); finishRound(); }
-    else { renderGray(); renderGrayChoices(); resetGraySlider(); }
+    else { sfx.level(t.v, 0.18); renderGray(); renderGrayChoices(); resetGraySlider(); }   /* 맞힌 밝기를 음높이로 */
   } else {
     sfx.bad(); S.misses++;
     if (btn) { btn.classList.add("bad"); setTimeout(() => btn.classList.remove("bad"), 320); }
@@ -2319,7 +2832,7 @@ function tryRgb(rgb, btn) {
     toast(t.name + " 픽셀 복원 완료! [" + t.v.join(", ") + "]", "good");
     S.rgb.idx++;
     if (S.rgb.idx >= S.puzzle.targets.length) { renderRgb(); finishRound(); }
-    else { renderRgb(); renderRgbChoices(); resetRgbSliders(); }
+    else { sfx.mix(t.v, 0.18, 0.5); renderRgb(); renderRgbChoices(); resetRgbSliders(); }   /* 맞힌 색을 도·미·솔 화음으로 */
   } else {
     sfx.bad(); S.misses++;
     const off = ["R","G","B"].filter((_, i) => Math.abs(rgb[i] - t.v[i]) > TOL_RGB);
@@ -2495,6 +3008,7 @@ function useRevHint() {
   const idx = S.rev.revealed.findIndex(v => !v);
   if (idx < 0) return;
   S.rev.revealed[idx] = true; S.hintUsed++;
+  sfx.hint();
   const names = ["Red","Green","Blue"];
   $(["revRedSlider","revGreenSlider","revBlueSlider"][idx]).value = S.rev.target[idx];
   paintRev();
@@ -2527,7 +3041,7 @@ function tryReverse() {
     finishRound();
     return;
   }
-  sfx.bad(); S.misses++;
+  S.misses++;
   const parts = ["R","G","B"].map((ch, i) =>
     okArr[i] ? '<span class="ok">' + ch + ' OK</span>'
              : ch + ' <span class="up">' + (diffs[i] > 0 ? "올리기 ▲" : "내리기 ▼") + '</span>');
@@ -2535,7 +3049,7 @@ function tryReverse() {
 
   const left = REV_TRIES - S.rev.tries;
   if (left <= 0) {
-    S.running = false; stopTimer(); sfx.fail();
+    S.running = false; stopTimer(); sfx.fail(); bgm.set("");
     $("reverseTargetValue").textContent = "[" + t.join(", ") + "]";
     $("reverseTargetValue").classList.remove("pink");
     toast("전송 기회를 모두 사용했습니다. 정답은 [" + t.join(", ") + "] 였습니다.", "bad");
@@ -2543,6 +3057,7 @@ function tryReverse() {
     setTimeout(() => { if (seq === S.seq) { settleRound(true); showReport(); } }, 1400);
     return;
   }
+  sfx.warmer(diffs, okArr);        /* 채널마다 한 음 : 맞으면 '딩', 올려야 하면 오르는 소리, 내려야 하면 내리는 소리 */
   toast("아직 다릅니다 · 남은 기회 " + left + "회 (" + missNote() + ")", "bad");
   if (S.misses >= 2 && S.hintUsed < REV_HINT_MAX) $("hintButton").hidden = false;
 }
@@ -2656,7 +3171,7 @@ function renderPacket() {
   if (pk.type === "cipher" && !S.fin.cipherSeen) {      /* 첫 암호 패킷이 나오면 해커가 도발한다 */
     S.fin.cipherSeen = true;
     const seq = S.seq;
-    setTimeout(() => { if (seq === S.seq && S.fin.idx === i) bossSay("암호 패킷이다! 이번엔 숫자를 숨겼지~"); }, 450);
+    setTimeout(() => { if (seq === S.seq && S.fin.idx === i) { bossSay("암호 패킷이다! 이번엔 숫자를 숨겼지~"); sfx.taunt(); } }, 450);
   }
 }
 
@@ -2665,7 +3180,7 @@ function onFinalCellTap(cell, r, c) {
   const pk = S.puzzle.packets[S.fin.idx];
   if (!pk || S.fin.locked) return;
   if (r === pk.r && c === pk.c) {
-    sfx.click();
+    sfx.lock();
     S.fin.locked = true;
     cell.classList.add("lock");
     $("pkStatus").innerHTML = pk.type === "normal"
@@ -2674,7 +3189,7 @@ function onFinalCellTap(cell, r, c) {
     renderPacketChoices(pk);
   } else {
     /* 좌표 오탭은 감점 없이 위치만 알려준다 */
-    sfx.tick();
+    sfx.nope();
     cell.classList.add("shake");
     setTimeout(() => cell.classList.remove("shake"), 320);
     toast("그 칸은 (행 " + (r + 1) + ", 열 " + (c + 1) + ") — 찾는 곳은 (행 " + (pk.r + 1) + ", 열 " + (pk.c + 1) + ")", "info");
@@ -2684,6 +3199,7 @@ function onFinalCellTap(cell, r, c) {
 function renderPacketChoices(pk) {
   const box = $("pkChoices"); box.innerHTML = "";
   box.classList.toggle("tiles", pk.type === "normal");     /* 색 보기는 정사각형 타일, 숫자 보기는 가로 버튼 */
+  box.classList.toggle("nums", pk.type !== "normal");      /* 숫자 보기는 [R, G, B] 가 한 줄에 들어가게 배치 */
   if (pk.type === "normal") {
     /* 팔레트의 다른 색들 중 3개 (충분히 다른 색만) */
     const others = shuffle(FACE_PAL.filter(p => p.hex !== pk.hex && rgbDist(p.rgb, pk.rgb) > 45)).slice(0, 3);
@@ -2757,11 +3273,14 @@ function startRound(i) {
   S.seq++; closeStory(); hideClearFx();
   S.round = i;
   S.cur = ROUNDS[i];
-  S.misses = 0; S.hintUsed = 0;
+  S.misses = 0; S.hintUsed = 0; sfx.streak = 0;
   S.running = true; S.paused = false;
   $("finalSlot").innerHTML = "";          /* 이전 결과 화면이 남아 있지 않도록 */
   closeModal($("simpleModal")); closeModal($("reportModal"));
   const r = ROUNDS[i];
+  /* 배경음악 : 최종 단계는 보스전 곡, 나머지는 단계 곡을 단계마다 조금씩 높은 조로 */
+  if (r.kind === "final") bgm.set("boss");
+  else bgm.set("stage", [0, 2, 4, 5, 7][i] || 0);
   $("stageTitle").textContent = (S.mode === "practice" ? "연습 · " : "") + r.title;
   renderSteps(); setRestore(0); setRestoreLabel("복원율");
 
@@ -2822,7 +3341,11 @@ function beginRoundTimer(r) {
   playStory(lines, () => { S.running = true; startTimer(r.time); });
 }
 function finishRound() {
-  S.running = false; stopTimer(); sfx.clear();
+  S.running = false; stopTimer();
+  const k = S.cur.kind;
+  bgm.tempo(1); bgm.duck(k === "final" ? 2.4 : 1.9);
+  if (k === "final") sfx.bossDown();                          /* 보스 격파 : 폭발 + 승리 팡파르 */
+  else sfx.clear(k === "binary" ? S.puzzle.d.flat() : null);  /* 1단계 그림은 복원한 그림을 악보처럼 연주 */
   playClearFx(clearFxOptions(), () => { settleRound(); showReport(); });
 }
 
@@ -3057,7 +3580,9 @@ function showReport() {
   if (S.mode === "custom") { $("quizBox").innerHTML = ""; S.quiz = null; }   /* 친구 문제에는 퀴즈 없음 */
   else renderQuiz(r.kind);
   S.lastResult.newStar = false;
-  updateReportStars();
+  sfx.streak = 0;
+  updateReportStars(true);                                   /* 별이 하나씩 켜지며 '딩' */
+  $("miniListen").hidden = !LISTEN_KINDS.includes(r.kind);  /* 복원한 그림을 숫자 → 소리로 들어 보기 */
 
   const retry = $("modalRetryButton");
   if (S.mode === "practice" || S.mode === "custom") {
@@ -3079,7 +3604,7 @@ function nextFromReport() {
   closeModal($("reportModal"));
   if (S.mode === "practice") { goHome(); openPractice(); return; }
   if (S.mode === "custom") { goHome(); openWorkshop(S.customFromCode ? "solve" : "make"); return; }
-  if (S.round >= ROUNDS.length - 1) playStory(STORY.ending, showFinal, "결과 보기 ▶");
+  if (S.round >= ROUNDS.length - 1) { bgm.set("ending"); playStory(STORY.ending, showFinal, "결과 보기 ▶"); }
   else startRound(S.round + 1);
 }
 
@@ -3173,7 +3698,12 @@ function showFinal() {
   $("survivalButton").addEventListener("click", () => { sfx.click(); startSurvival(); });
   $("badgesButton").addEventListener("click", () => { sfx.click(); openBadges(); });
   $("homeButton").addEventListener("click", () => { sfx.click(); goHome(); });
+  /* 승리 팡파르 → (최고 기록이면) 기록 경신 → (처음 끝냈으면) 서바이벌 해금 소리를 차례로 */
   sfx.clear();
+  let at = 1.0;
+  if (isNewBest) { sfx.record(at); at += 1.0; }
+  if (newlyUnlocked) { sfx.unlock(at); at += 1.1; }
+  bgm.duck(at + 0.3);
   document.querySelector(".app").scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -3201,7 +3731,7 @@ function initResolutionLab() {
     const prev = parseInt(numsEl.textContent.replace(/[^0-9]/g, "")) || 0;
     animateNumber(numsEl, prev, n * n * 3, 550);
   };
-  slider.addEventListener("input", () => { sfx.tick(); draw(); });
+  slider.addEventListener("input", () => { sfx.tick(+slider.value * 60); draw(); });   /* 해상도가 높을수록 높은 소리 */
   if (!labImg) { labImg = new Image(); labImg.onload = draw; labImg.src = FACE_LAB_SRC; }
   else draw();
 }
@@ -3209,23 +3739,27 @@ function initResolutionLab() {
 /* =========================================================================
    17. 일시정지 / 시간초과 공용 모달
    ========================================================================= */
-function showSimple(title, body, primaryLabel, secondaryLabel, onPrimary, onSecondary, charId) {
+function showSimple(title, body, primaryLabel, secondaryLabel, onPrimary, onSecondary, charId, withSound) {
   setSutami($("simpleChar"), charId);          /* 상황에 맞는 수탐이 (없으면 숨김) */
   $("simpleTitle").textContent = title;
   $("simpleBody").textContent = body;
   const p = $("simplePrimary"), s = $("simpleSecondary");
   p.textContent = primaryLabel; s.textContent = secondaryLabel;
+  $("simpleSound").hidden = !withSound;        /* 일시정지 창에서만 '소리 설정' */
   S.pendingAction = { onPrimary, onSecondary };
   openModal($("simpleModal"), p);
 }
-function togglePause() {
-  if (!S.running && !S.paused) return;
-  if (S.paused) { closeModal($("simpleModal")); S.paused = false; resumeTimer(); return; }
-  S.paused = true; pauseTimer();
+function resumeFromPause() { S.paused = false; resumeTimer(); bgm.hold(false); sfx.pause(false); }
+function showPauseDialog() {
   showSimple("일시정지", "타이머가 멈췄습니다. 준비되면 계속하기를 누르세요.",
     "계속하기", S.mode === "campaign" ? "처음부터" : "다시 시작",
-    () => { S.paused = false; resumeTimer(); },
-    () => restartCurrent(), "E15");
+    resumeFromPause, () => restartCurrent(), "E15", true);
+}
+function togglePause() {
+  if (!S.running && !S.paused) return;
+  if (S.paused) { closeModal($("simpleModal")); resumeFromPause(); return; }
+  S.paused = true; pauseTimer(); bgm.hold(true); sfx.pause(true);
+  showPauseDialog();
 }
 
 /* =========================================================================
@@ -3235,7 +3769,7 @@ function togglePause() {
 function enterPlay() {
   sfx.init(); sfx.click();
   rain.stop();
-  ["practiceModal", "badgeModal", "workshopModal"].forEach(id => closeIfOpen($(id)));
+  ["practiceModal", "badgeModal", "workshopModal", "soundModal"].forEach(id => closeIfOpen($(id)));
   $("startScreen").hidden = true;
   $("playScreen").style.display = "flex";
   $("finalSlot").innerHTML = "";
@@ -3276,19 +3810,23 @@ function goHome() {
   $("finalSlot").innerHTML = "";
   refreshStartScreen();
   rain.start();
+  bgm.set("title");
 }
 
 /* =========================================================================
    19. 이벤트 바인딩
    ========================================================================= */
-function bindSlider(id, onPaint) { $(id).addEventListener("input", () => { sfx.tick(); onPaint(); }); }
+/* 0~255 슬라이더 : 값이 클수록 높은 '틱' — 숫자의 크기를 귀로도 느낀다 */
+function bindSlider(id, onPaint) { $(id).addEventListener("input", () => { sfx.tick(+$(id).value); onPaint(); }); }
+/** 게임 화면 오른쪽 위 스피커 버튼 : 효과음·배경음악을 한 번에 끄고 켠다 */
 function syncMuteButton() {
-  const b = $("muteButton");
-  b.setAttribute("aria-pressed", String(!S.soundOn));
-  b.setAttribute("aria-label", S.soundOn ? "효과음 끄기" : "효과음 켜기");
-  b.innerHTML = S.soundOn
-    ? '<svg class="icon" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4zM16 9l2.5 3-2.5 3"/></svg>'
-    : '<svg class="icon" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4zM17 9l4 6M21 9l-4 6"/></svg>';
+  const b = $("muteButton"), off = soundMuted();
+  b.setAttribute("aria-pressed", String(off));
+  b.setAttribute("aria-label", off ? "소리 켜기" : "모든 소리 끄기");
+  b.title = off ? "소리 켜기 (M)" : "소리 끄기 (M)";
+  b.innerHTML = off
+    ? '<svg class="icon" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4zM17 9l4 6M21 9l-4 6"/></svg>'
+    : '<svg class="icon" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4zM16 9l2.5 3-2.5 3"/></svg>';
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -3299,19 +3837,17 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   applyStageSet(INCLUDE_KERNEL_STAGE);
   $("startFoot").textContent = "총 " + ROUNDS.length + "단계 · 만점 " + MAX_TOTAL.toLocaleString() +
-    "점 (라운드당 " + ROUND_MAX.toLocaleString() + "점) · 효과음은 게임 화면 오른쪽 위에서 끌 수 있습니다";
+    "점 (라운드당 " + ROUND_MAX.toLocaleString() + "점) · 소리는 ‘소리 설정’에서 바꿀 수 있습니다";
   rain.start();
+  /* 오디오는 첫 터치·클릭·키 입력 때 깨운다 — 배경음악을 켜 두었다면 이때 시작 화면 곡이 흐른다 */
+  ["pointerdown", "touchend", "keydown"].forEach(t => document.addEventListener(t, () => sfx.init(), { capture: true, passive: true }));
+  bgm.set("title");
+  syncMuteButton();
   $("revTolText").textContent = TOL_REV;
   $("startButton").addEventListener("click", startGame);
   $("modalConfirmButton").addEventListener("click", nextFromReport);
   $("simplePrimary").addEventListener("click", () => { closeModal($("simpleModal")); S.pendingAction?.onPrimary?.(); });
   $("simpleSecondary").addEventListener("click", () => { closeModal($("simpleModal")); S.pendingAction?.onSecondary?.(); });
-
-  document.querySelectorAll("[data-sound]").forEach(b => b.addEventListener("click", () => {
-    S.soundOn = b.dataset.sound === "on";
-    document.querySelectorAll("[data-sound]").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
-    syncMuteButton();
-  }));
 
   $("pauseButton").addEventListener("click", togglePause);
   $("restartButton").addEventListener("click", () => {
@@ -3323,12 +3859,7 @@ document.addEventListener("DOMContentLoaded", () => {
     showSimple("처음부터 다시?", msg,
       "다시 시작", "취소", () => restartCurrent(), () => { S.paused = false; resumeTimer(); }, "E07");
   });
-  $("muteButton").addEventListener("click", () => {
-    S.soundOn = !S.soundOn; syncMuteButton();
-    document.querySelectorAll("[data-sound]").forEach(x =>
-      x.setAttribute("aria-pressed", String((x.dataset.sound === "on") === S.soundOn)));
-    if (S.soundOn) sfx.click();
-  });
+  $("muteButton").addEventListener("click", toggleMuteAll);
 
   /* Stage 2 — 슬라이더는 색을 확인해 보는 참고용. 정답 판정은 1~4번 선택지로만 한다 */
   bindSlider("graySlider", paintGray);
@@ -3361,7 +3892,8 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       return;
     }
-    if (e.key === "Escape") {          /* 연습·배지·공방 창은 Esc 로 닫힌다 */
+    if (e.key === "Escape") {          /* 연습·배지·공방·소리 설정 창은 Esc 로 닫힌다 */
+      if ($("soundModal").classList.contains("open")) { e.preventDefault(); closeSound(); return; }
       const menu = ["practiceModal", "badgeModal", "workshopModal"].map($).find(m => m.classList.contains("open"));
       if (menu) { e.preventDefault(); closeModal(menu); return; }
     }
@@ -3377,6 +3909,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   document.addEventListener("visibilitychange", () => {
     if (document.hidden && S.running && !S.paused) togglePause();
+    sfx.visible(!document.hidden);     /* 다른 앱으로 가면 소리도 멈춘다 */
   });
 });
 
@@ -3391,12 +3924,109 @@ function loadMeta() {
   ["stars", "badges", "unlock"].forEach(k => { if (!m[k] || typeof m[k] !== "object") m[k] = {}; });
   m.survBest = Number(m.survBest) || 0;
   if (typeof m.story !== "boolean") m.story = true;
+  /* 소리 설정 : 배경음악은 기본 꺼짐 (교실에서 여러 대가 한꺼번에 울리지 않도록) */
+  const sd = (m.sound && typeof m.sound === "object") ? m.sound : {};
+  m.sound = { sfx: sd.sfx !== false, bgm: sd.bgm === true, vol: [1, 2, 3].indexOf(sd.vol) >= 0 ? sd.vol : 2,
+              calm: sd.calm === true, vibe: sd.vibe === true };
   return m;
 }
 const META = loadMeta();
 function saveMeta() { try { localStorage.setItem(META_KEY, JSON.stringify(META)); } catch (e) { /* 저장 불가 환경은 무시 */ } }
 const prefersReducedMotion = () => !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 function closeIfOpen(el) { if (el && el.classList.contains("open")) closeModal(el); }
+
+/* ---- 소리 설정 창 (시작 화면 '소리 설정' · 일시정지 창의 '소리 설정') ---- */
+let muteMemo = null;            /* 스피커 버튼으로 모두 끄기 직전의 설정 — 다시 누르면 그대로 되살린다 */
+let soundFromPause = false;
+const soundMuted = () => !META.sound.sfx && !META.sound.bgm;
+function soundChanged() { saveMeta(); sfx.apply(); bgm.sync(); syncMuteButton(); syncSoundUI(); }
+function syncSoundUI() {
+  const s = META.sound;
+  document.querySelectorAll("[data-snd]").forEach(b => {
+    const [k, v] = b.dataset.snd.split(":");
+    b.setAttribute("aria-pressed", String(k === "vol" ? s.vol === +v : s[k] === (v === "1")));
+  });
+}
+function toggleMuteAll() {
+  const s = META.sound;
+  if (!soundMuted()) { muteMemo = { sfx: s.sfx, bgm: s.bgm }; s.sfx = false; s.bgm = false; }
+  else { const m = muteMemo || { sfx: true, bgm: false }; s.sfx = m.sfx; s.bgm = m.bgm; muteMemo = null; }
+  sfx.init(); soundChanged();
+  sfx.click();
+}
+function openSound(fromPause) {
+  soundFromPause = !!fromPause;
+  syncSoundUI();
+  openModal($("soundModal"), $("soundModal").querySelector("[data-close]"));
+}
+/** 닫을 때, 일시정지 창에서 열었으면 일시정지 창으로 돌아간다 */
+function closeSound() {
+  closeModal($("soundModal"));
+  if (soundFromPause && S.paused && $("playScreen").style.display === "flex") showPauseDialog();
+  soundFromPause = false;
+}
+function setSound(key, val) {
+  const s = META.sound;
+  s[key] = key === "vol" ? +val : val === "1";
+  muteMemo = null;
+  sfx.init(); soundChanged();
+  if (key === "vibe") { if (s.vibe) sfx.buzz(70); }      /* 바뀐 설정을 바로 느껴 보게 */
+  else if (key !== "bgm" || !s.bgm) sfx.good(true);
+}
+
+/* ---- 숫자를 소리로 : 리포트·공방의 '소리로 듣기' — 연주되는 칸을 차례로 밝힌다 ---- */
+const LISTEN_KINDS = ["binary", "gray", "rgb", "paint", "reverse"];
+const NOTE_BIN = "세로줄 하나가 한 박자 — 1인 칸이 음표가 되고, 위쪽 칸일수록 높은 소리가 납니다.";
+const NOTE_GRAY = "왼쪽 위부터 한 줄씩 읽습니다 — 밝기 값이 클수록 높은 소리가 납니다.";
+const NOTE_RGB = "왼쪽 위부터 한 줄씩 — R·G·B 값이 ‘도·미·솔’ 세 음의 크기가 됩니다. 0이면 그 음은 조용!";
+let listenUntil = 0;
+function pingCell(el, at, ms) {
+  if (!el) return;
+  setTimeout(() => { el.classList.add("ping"); setTimeout(() => el.classList.remove("ping"), ms); }, at * 1000);
+}
+/** kind : bin(이진 그림 — 세로줄 = 박자) · gray(밝기 → 음높이) · rgb([R,G,B] → 도·미·솔 세 음의 크기)
+    vals : 칸 값들 (쉬는 칸은 null), els : 같은 순서의 칸 요소들 */
+function listenMatrix(kind, vals, els, note) {
+  sfx.init();
+  if (!sfx.on()) { toast("효과음이 꺼져 있습니다 — ‘소리 설정’에서 켜 주세요.", "info"); return; }
+  if (!vals.some(v => v != null && v !== 0)) { toast("소리로 바꿀 칸이 없습니다 — 먼저 그림을 그려 보세요.", "info"); return; }
+  const now = performance.now();
+  if (now < listenUntil) return;                 /* 연주 중에 또 누르면 무시 */
+  let total;
+  if (kind === "bin") {
+    const gap = 0.26;
+    for (let c = 0; c < 5; c++) for (let r = 0; r < 5; r++) pingCell(els[r * 5 + c], 0.05 + c * gap, 230);
+    sfx.picture(vals, 5, 0.05, gap);
+    total = 0.05 + 5 * gap + 0.3;
+  } else {
+    const gap = kind === "gray" ? 0.13 : 0.17, d = vals.length === 1 ? 0.9 : gap * 1.6;
+    vals.forEach((v, i) => {
+      const at = 0.05 + i * gap;
+      if (v != null) { if (kind === "gray") sfx.level(v, at, d); else sfx.mix(v, at, d); }
+      pingCell(els[i], at, vals.length === 1 ? 900 : gap * 1000);
+    });
+    total = 0.05 + vals.length * gap + d;
+  }
+  listenUntil = now + total * 1000;
+  bgm.duck(total);
+  if (note) toast(note, "info");
+}
+function listenReport() {
+  const k = S.cur && S.cur.kind, spans = [...$("miniDisplay").children];
+  if (k === "binary") listenMatrix("bin", S.puzzle.d.flat(), spans, NOTE_BIN);
+  else if (k === "gray") listenMatrix("gray", S.puzzle.d.flat(), spans, NOTE_GRAY);
+  else if (k === "rgb") listenMatrix("rgb", S.puzzle.d.flat(), spans, NOTE_RGB);
+  else if (k === "paint") listenMatrix("rgb", S.puzzle.cells.map(v => v === S.paint.bg ? null : PAINT8[v].rgb), spans,
+                                       "왼쪽 위부터 한 줄씩 — 배경 칸은 쉬고, 색칠한 칸은 R·G·B 값이 ‘도·미·솔’ 세 음의 크기가 됩니다.");
+  else if (k === "reverse") listenMatrix("rgb", [S.rev.target], spans,
+                                         "R·G·B 값이 ‘도·미·솔’ 세 음의 크기가 됩니다. 흰색에 가까울수록 꽉 찬 화음!");
+}
+function listenWs() {
+  const els = [...$("wsCanvas").children];
+  if (WS.kind === "bin") listenMatrix("bin", WS.bin.slice(), els, NOTE_BIN);
+  else listenMatrix("rgb", WS.col.map(v => v === 0 ? null : PAINT8[v].rgb), els,
+                    "왼쪽 위부터 한 줄씩 — 흰 칸은 쉬고, 색칠한 칸은 R·G·B 값이 ‘도·미·솔’ 세 음의 크기가 됩니다.");
+}
 
 /* ---- 배지 : 아이콘은 5×5 픽셀 그림 (이미지는 숫자라는 주제를 그대로 살린다) ---- */
 const BADGES = [
@@ -3490,15 +4120,32 @@ function starHtml(n) {
   return '<span aria-hidden="true">' + "★".repeat(n) + '<span class="off">' + "★".repeat(3 - n) + '</span></span>' +
          '<span class="sr-only">별 ' + n + '개</span>';
 }
-/** 리포트에 이번 별을 표시하고, 본편·연습이면 단계별 최고 기록으로 저장 */
-function updateReportStars() {
+/** 리포트용 별 : 새로 켜지는 별(from 번째부터)이 0.28초 간격으로 하나씩 켜진다 — 소리 '딩'과 박자를 맞춤 */
+function starPopHtml(n, from, delay) {
+  let h = '<span aria-hidden="true">';
+  for (let i = 0; i < 3; i++) {
+    if (i < from) h += '<span>★</span>';
+    else if (i < n) h += '<span class="pop" style="animation-delay:' + (delay + (i - from) * 0.28).toFixed(2) + 's">★</span>';
+    else h += '<span class="off">★</span>';
+  }
+  return h + '</span><span class="sr-only">별 ' + n + '개</span>';
+}
+/** 리포트에 이번 별을 표시하고, 본편·연습이면 단계별 최고 기록으로 저장.
+    intro = 리포트를 처음 열 때 (별이 처음부터 하나씩), 아니면 개념 체크로 늘어난 별만 새로 켠다 */
+function updateReportStars(intro) {
   const res = S.lastResult; if (!res) return;
   const n = starsOf(res);
   if (S.mode === "campaign" || S.mode === "practice") {
     if (n > (META.stars[res.kind] || 0)) { META.stars[res.kind] = n; saveMeta(); res.newStar = true; }
     if (ROUNDS.every(r => (META.stars[r.kind] || 0) >= 3)) unlockBadge("allstar");
   }
-  $("modalStars").innerHTML = starHtml(n) + (res.newStar ? '<span class="new">NEW</span>' : "");
+  if (intro || n !== S.starShown) {
+    const from = intro ? 0 : Math.min(S.starShown || 0, n), delay = intro ? 0.45 : 0.15;
+    $("modalStars").innerHTML = starPopHtml(n, from, delay) + (res.newStar
+      ? '<span class="new" style="animation-delay:' + (delay + Math.max(0, n - from) * 0.28).toFixed(2) + 's">NEW</span>' : "");
+    if (n > from) sfx.stars(n, from, delay);
+    S.starShown = n;
+  }
   updateReportChar();
 }
 /* 리포트에서 등급에 따라 달라지는 수탐이의 표정과 한마디 (D = 실패) */
@@ -3662,6 +4309,7 @@ function storyShow() {
   }
   $("storyNext").textContent = st.i === st.lines.length - 1 ? st.lastLabel : "다음 ▶";
   st.full = text;
+  sfx.line(who);
   const el = $("storyText");
   if (prefersReducedMotion()) { el.textContent = text; return; }
   /* 타자 치듯 두 글자씩 — 아직 안 나온 글자도 안 보이게 자리를 잡아 둬서,
@@ -3674,6 +4322,7 @@ function storyShow() {
   st.typing = setInterval(() => {
     k += 2;
     shown.textContent = text.slice(0, k); rest.textContent = text.slice(k);
+    if (/[^\s.,!?…~—‘’“”]/.test(text.slice(k - 2, k))) sfx.talk(who);   /* 글자가 나올 때만 (띄어쓰기·문장부호는 조용히) */
     if (k >= text.length) { clearInterval(st.typing); st.typing = null; }
   }, 28);
 }
@@ -3682,8 +4331,7 @@ function storyNext() {
   if (st.typing) { clearInterval(st.typing); st.typing = null; $("storyText").textContent = st.full; return; }
   st.i++;
   if (st.i >= st.lines.length) { endStory(); return; }
-  sfx.click();
-  storyShow();
+  storyShow();                         /* 대사가 바뀌는 소리·타자 소리는 storyShow 가 낸다 */
 }
 /** 대화를 끝내고 이어서 할 일을 실행한다 (건너뛰기도 여기로) */
 function endStory() {
@@ -3736,12 +4384,14 @@ function bossHit() {
   if (seg) { seg.classList.remove("break"); void seg.offsetWidth; seg.classList.add("break"); }
   const bar = $("bossBar");
   bar.classList.remove("hit", "laugh"); void bar.offsetWidth; bar.classList.add("hit");
+  if (left > 0) sfx.hit();                 /* 마지막 한 방은 격파 소리(finishRound)가 맡는다 */
   bossSay(left <= 0 ? "으아아— 내 픽셀들이!"
                     : pickOne(["크윽!", "이럴 수가!", "제법인데…?", "아직 안 끝났어!", "내 데이터가…!"]));
 }
 function bossLaugh() {
   const bar = $("bossBar");
   bar.classList.remove("hit", "laugh"); void bar.offsetWidth; bar.classList.add("laugh");
+  sfx.laugh();
   bossSay(pickOne(["크크, 틀렸지롱!", "숫자를 잘 봐야지~", "그게 아니야!", "헤헤, 아깝다!"]));
 }
 
@@ -3797,7 +4447,7 @@ const SURV_GEN = {
   gray(L) {
     const v = 8 + randInt(240);
     const opts = spreadPick(v, () => randInt(256), (a, b) => Math.abs(a - b), Math.max(16, 66 - L * 5), 4);
-    return { type:"choice", tile:true, prompt:"이 밝기 값에 맞는 색을 고르세요.",
+    return { type:"choice", tile:true, prompt:"이 밝기 값에 맞는 색을 고르세요.", val: v,
       data:'<div><p class="surv-big">' + v + '</p><p class="art-cap">0 = 검정 · 255 = 흰색</p></div>',
       choices: opts.map(o => ({ ok: o === v, html:'<div class="swatch" style="background:' + hex(o, o, o) + '"></div>' })),
       answer:"밝기 " + v };
@@ -3806,7 +4456,7 @@ const SURV_GEN = {
     const rnd = () => [0, 1, 2].map(() => 10 + randInt(236));
     const t = rnd();
     const opts = spreadPick(t, rnd, rgbDist, Math.max(50, 160 - L * 12), 4);
-    return { type:"choice", tile:true, prompt:"이 [R, G, B] 값에 맞는 색을 고르세요.",
+    return { type:"choice", tile:true, prompt:"이 [R, G, B] 값에 맞는 색을 고르세요.", val: t,
       data:'<p class="surv-big">[' + t.join(", ") + ']</p>',
       choices: opts.map(o => ({ ok: o === t, html:'<div class="swatch" style="background:' + hex(o[0], o[1], o[2]) + '"></div>' })),
       answer:"[" + t.join(", ") + "]" };
@@ -3819,7 +4469,7 @@ const SURV_GEN = {
       return t.map((v, i) => ch.includes(i) ? clamp(v + (randInt(2) ? 1 : -1) * (step + randInt(40)), 0, 255) : v);
     };
     const opts = spreadPick(t, make, rgbDist, step * 0.8, 4);
-    return { type:"choice", num:true, prompt:"이 색의 [R, G, B] 값은 무엇일까요?",
+    return { type:"choice", num:true, prompt:"이 색의 [R, G, B] 값은 무엇일까요?", val: t,
       data:'<div class="surv-swatch" style="background:' + hex(t[0], t[1], t[2]) + '"></div>',
       choices: opts.map(o => ({ ok: o === t, text:"[" + o.join(", ") + "]" })),
       answer:"[" + t.join(", ") + "]" };
@@ -3858,10 +4508,11 @@ const SURV_GEN = {
   }
 };
 function startSurvival() {
-  if (!survivalUnlocked()) { sfx.tick(); toast("본편을 한 번 끝까지 마치면 서바이벌이 열립니다.", "info"); return; }
+  if (!survivalUnlocked()) { sfx.nope(); toast("본편을 한 번 끝까지 마치면 서바이벌이 열립니다.", "info"); return; }
   enterPlay();
   closeIfOpen($("simpleModal")); closeIfOpen($("reportModal"));
   S.mode = "survival"; S.seq++; closeStory(); hideClearFx();
+  sfx.streak = 0; bgm.set("stage");                 /* 레벨이 오를수록 배경음악이 빨라진다 (renderSurvHud) */
   S.round = -1;
   S.cur = { kind:"survival", chip:"서바이벌", title:"서바이벌", time:0 };
   S.score = 0; S.misses = 0; S.hintUsed = 0; S.runBadges = [];
@@ -3890,6 +4541,7 @@ function renderSurvHud(broke) {
   $("stageTitle").textContent = "서바이벌 · LV " + S.surv.level;
   setRestore((S.surv.correct % SURV_PER_LEVEL) / SURV_PER_LEVEL * 100);
   renderSteps();
+  bgm.tempo(Math.min(1.4, 1 + (S.surv.level - 1) * 0.05));     /* 레벨마다 배경음악 5%씩 빠르게 (최대 1.4배) */
 }
 function nextSurvQ() {
   if (S.mode !== "survival") return;
@@ -3902,6 +4554,7 @@ function nextSurvQ() {
   const data = $("survData"), box = $("survChoices");
   box.innerHTML = "";
   box.classList.toggle("tiles", !!q.tile);       /* 색 보기(tile)만 정사각형 타일로 놓는다 */
+  box.classList.toggle("nums", !!q.num);         /* 숫자 보기는 [R, G, B] 가 한 줄에 들어가게 배치 */
   if (q.type === "tap") {
     data.innerHTML = ""; data.appendChild(buildSurvGrid(q));
     box.innerHTML = '<div class="surv-tap">왼쪽 이미지에서<br><b>' + q.answer + '</b> 칸을 직접 탭하세요.</div>';
@@ -3971,12 +4624,15 @@ function survAnswer(ok, el, why) {
     const levelUp = S.surv.correct % SURV_PER_LEVEL === 0;
     if (levelUp) S.surv.level++;
     renderSurvHud();
-    if (levelUp) { sfx.clear(); toast("레벨 업! LV " + S.surv.level + " — 문제가 더 어려워집니다", "good"); }
+    if (levelUp) { sfx.levelUp(0.16); toast("레벨 업! LV " + S.surv.level + " — 문제가 더 어려워집니다", "good"); }
+    else if (typeof q.val === "number") sfx.level(q.val, 0.16);    /* 맞힌 밝기를 음높이로 */
+    else if (q.val) sfx.mix(q.val, 0.16, 0.4);                     /* 맞힌 색을 도·미·솔 화음으로 */
     if (S.surv.correct >= 20) unlockBadge("survivor");
     setTimeout(() => { if (seq === S.seq) nextSurvQ(); }, levelUp ? 1000 : 600);
   } else {
-    sfx.bad(); S.misses++;
+    S.misses++;
     S.surv.hearts = Math.max(0, S.surv.hearts - 1);
+    sfx.heart(S.surv.hearts === 0);          /* 하트가 깨지는 소리 (마지막 하트면 진동도 길게) */
     if (el) el.classList.add("bad");
     if (q.correctEl) q.correctEl.classList.add(q.type === "tap" ? "reveal" : "right");
     $("survFeedback").innerHTML = '<span class="bad">' + (why || "오답") + '</span> — 정답은 <b>' + q.answer + '</b>';
@@ -3989,9 +4645,9 @@ function survAnswer(ok, el, why) {
   }
 }
 function survGameOver() {
-  S.running = false; stopTimer(); sfx.fail();
+  S.running = false; stopTimer(); sfx.fail(); bgm.set("");
   const prev = META.survBest || 0, isBest = S.score > prev;
-  if (isBest) { META.survBest = S.score; saveMeta(); }
+  if (isBest) { META.survBest = S.score; saveMeta(); sfx.record(1.3); }
   showPane(null);
   $("stageTitle").textContent = "서바이벌 · 게임 오버";
   $("timeText").textContent = "종료"; $("timeFill").style.width = "0%";
@@ -4137,7 +4793,7 @@ function renderPalette(box, sel, onPick) {
     b.setAttribute("aria-label", "색 " + (k + 1) + "번 " + p.name);
     b.setAttribute("aria-pressed", String(k === sel));
     b.addEventListener("click", () => {
-      sfx.click(); onPick(k);
+      sfx.paint(k); onPick(k);                    /* 색마다 늘 같은 높이의 '톡' */
       box.querySelectorAll(".ws-sw").forEach((x, j) => x.setAttribute("aria-pressed", String(j === k)));
     });
     box.appendChild(b);
@@ -4169,7 +4825,7 @@ function wsStroke(i, start) {
   cells[i] = WS.val;
   const b = $("wsCanvas").children[i];
   if (b) paintWsCell(b, WS.val);
-  sfx.tick();
+  sfx.paint(WS.val, WS.kind === "bin");
   wsChanged(false);
 }
 function wsChanged(full) {
@@ -4230,7 +4886,7 @@ function wsMakeCode() {
   $("wsCodeBox").hidden = false;
   $("wsCodeBox").scrollIntoView({ block: "nearest" });     /* 화면이 낮아도 코드가 바로 보이게 */
   WS.made = p;
-  sfx.good();
+  sfx.code($("wsCode").textContent);                       /* 코드 글자가 '데이터 전송음'으로 */
   unlockBadge("maker");
 }
 function wsCopy() {
@@ -4256,6 +4912,7 @@ function startCustom(p, fromCode) {
   closeIfOpen($("simpleModal")); closeIfOpen($("reportModal"));
   S.mode = "custom"; S.custom = p; S.customFromCode = !!fromCode;
   S.seq++; closeStory(); hideClearFx();
+  sfx.streak = 0; bgm.set("stage");
   S.round = -1;
   S.score = 0; S.misses = 0; S.hintUsed = 0; S.runBadges = [];
   S.running = true; S.paused = false;
@@ -4316,7 +4973,7 @@ function onPaintCell(i, b) {
   if (!S.running || S.paused) return;
   const P = S.paint;
   if (P.done[i]) return;
-  if (P.sel === null) { sfx.tick(); toast("먼저 위 팔레트에서 색을 고르세요.", "info"); return; }
+  if (P.sel === null) { sfx.nope(); toast("먼저 위 팔레트에서 색을 고르세요.", "info"); return; }
   if (P.sel === P.cells[i]) {
     sfx.good();
     P.done[i] = true;
@@ -4397,6 +5054,7 @@ function initGameFeatures() {
     wsChanged(true);
   });
   $("wsMakeCode").addEventListener("click", wsMakeCode);
+  $("wsListen").addEventListener("click", listenWs);
   $("wsCopy").addEventListener("click", wsCopy);
   $("wsTryMine").addEventListener("click", () => { if (WS.made) startCustom(WS.made, false); });
   $("wsStart").addEventListener("click", wsSolveStart);
@@ -4405,6 +5063,24 @@ function initGameFeatures() {
     $("wsInput").value = sampleCode(b.dataset.sample);
     $("wsMsg").textContent = "예시 코드를 넣었습니다. ‘풀기 시작’을 누르세요.";
   }));
+  /* 소리 설정 */
+  $("soundButton").addEventListener("click", () => { sfx.init(); sfx.click(); openSound(false); });
+  $("simpleSound").addEventListener("click", () => { sfx.click(); closeModal($("simpleModal")); openSound(true); });
+  $("soundModal").querySelector("[data-close]").addEventListener("click", () => { sfx.click(); closeSound(); });
+  $("soundModal").addEventListener("click", (e) => { if (e.target === $("soundModal")) closeSound(); });
+  document.querySelectorAll("[data-snd]").forEach(b => b.addEventListener("click", () => {
+    const kv = b.dataset.snd.split(":"); setSound(kv[0], kv[1]);
+  }));
+  /* 진동은 진동을 지원하는 터치 기기(안드로이드 등)에서만 보인다 — PC 브라우저도 vibrate 를 갖고 있지만 떨 수 없다 */
+  $("vibeRow").hidden = !("vibrate" in navigator && window.matchMedia && matchMedia("(any-pointer: coarse)").matches);
+  $("sndTest").addEventListener("click", () => {
+    sfx.init();
+    if (!sfx.on()) { sfx.buzz(70); toast("효과음이 꺼져 있습니다 — 위에서 효과음을 켜 주세요.", "info"); return; }
+    sfx.demo();
+  });
+  /* 리포트 : 복원한 그림을 소리로 듣기 */
+  $("miniListen").addEventListener("click", listenReport);
+  syncSoundUI();
   refreshStartScreen();
 }
 document.addEventListener("DOMContentLoaded", initGameFeatures);
@@ -5003,6 +5679,8 @@ window.__PMR__ = { applyStageSet, grayDistractors, FACE_PAL, FACE_GRID, FACE_BG,
                    startPractice, startSurvival, startCustom, survAnswer, openPractice, openBadges, openWorkshop,
                    encodePuzzle, decodePuzzle, formatCode, sampleCode, refreshStartScreen,
                    SUTAMI, SUTAMI_MEDAL, sutamiSvg, sutamiSrc, showSimple,
+                   sfx, bgm, SONGS, compileSong, noteNo, listenMatrix, listenReport, listenWs, openSound, closeSound,
+                   toggleMuteAll, setSound, togglePause, showReport, finishRound, WS,
                    get story(){ return story; } };
 
 })();
