@@ -471,7 +471,7 @@ details[open]>.mixer-head .chev{transform:rotate(180deg)}
    들어갈 만큼 칸이 넓을 때만 나란히 놓는다. 좁은 오른쪽 패널(가로 화면 약 1130px 미만)에서는 한 줄에 하나씩 쌓인다 */
 .choice.num{font-family:var(--mono);font-weight:800;font-size:.86rem;color:#eafff8;
   text-align:center;padding:12px 4px;white-space:nowrap}
-.choices.nums{grid-template-columns:repeat(auto-fit,minmax(min(100%,128px),1fr));gap:10px}
+.choices.nums{grid-template-columns:repeat(auto-fit,minmax(min(100%,8rem),1fr));gap:10px}   /* 8rem = 128px ('글씨 크게'면 144px) */
 /* 폰·좁은 세로 태블릿 : 자동으로 놓으면 '셋 + 하나'가 될 수 있는 폭이라 두 개씩 두 줄로 고정 */
 @media(max-width:640px){.choices.nums{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
@@ -642,10 +642,7 @@ details[open]>.mixer-head .chev{transform:rotate(180deg)}
 .mode-cards{margin-top:28px}
 .mode-card{cursor:pointer;text-align:left;border:1px solid var(--line);
   transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
-.mode-card .no,.mode-card .mc-t,.mode-card .mc-d,.mode-card .meta{display:block}
-.mode-card .mc-t{font-size:1.04rem;font-weight:800;color:#fff}
-.mode-card .mc-d{margin-top:7px;font-size:.86rem;line-height:1.65;color:rgba(226,255,247,.88);word-break:keep-all}
-.mode-card .meta{margin-top:10px;font-size:.82rem;font-weight:800;color:var(--amber);word-break:keep-all}
+.mode-card .mc-t{display:block;font-size:1.04rem;font-weight:800;color:#fff}
 @media(hover:hover){.mode-card:hover{transform:translateY(-3px);border-color:rgba(57,255,136,.6);
   box-shadow:0 0 22px rgba(57,255,136,.16)}}
 .mode-card:active{transform:scale(.98)}
@@ -924,6 +921,197 @@ details[open]>.mixer-head .chev{transform:rotate(180deg)}
   100%{color:var(--amber);transform:none}}
 @keyframes newIn{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:none}}
 
+/* =========================================================================
+   화면 개선 (2026-11-17) — 얇은 HUD · 접히는 안내문 · 한 화면 배치 · 눈앞 피드백 · 8비트 게이지 · 장면 연출
+   ========================================================================= */
+/* HUD : 1줄 = 제목 · 진행 칸 · 도구, 2줄 = 게이지 (예전 3줄 150px → 약 100px).
+   아래로 스크롤하면(.mini) 제목 줄이 사라지고 게이지가 도구 옆 한 줄로 올라간다 */
+.hud>.wrap{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;column-gap:12px}
+.hud-top{display:contents}
+.hud-title{grid-column:1;grid-row:1;padding:7px 0 5px}
+.hud-title .hud-label{display:none}
+.hud-tools{grid-column:3;grid-row:1}
+.hud .btn-icon{width:42px;height:42px}
+.steps{grid-column:2;grid-row:1;padding:0;gap:4px}
+.hud-gauges{grid-column:1/-1;grid-row:2;padding-bottom:8px}
+.step{width:26px;height:26px;padding:0;justify-content:center;font-family:var(--mono);font-size:.76rem}
+.step .dot{display:none}
+.hud.mini .hud-title,.hud.mini .steps{display:none}
+.hud.mini .hud-gauges{grid-column:1/3;grid-row:1;padding:6px 0}
+.hud.mini .gauge-head{margin-bottom:3px}
+.hud.mini .score-box .hud-label{display:none}
+.hud.mini #scoreDisplay{font-size:1.1rem}
+@media(max-width:560px){
+  .steps{display:none}
+  .hud .btn-icon{width:38px;height:38px}
+  /* 폰에서 접힌 HUD 는 게이지 두 개와 점수를 한 줄에 (평소엔 점수가 따로 한 줄) */
+  .hud.mini .hud-gauges{grid-template-columns:1fr 1fr auto}
+  .hud.mini .hud-gauges .score-box{grid-column:auto}
+  .hud.mini .gauge-head>span:first-child{display:none}   /* 이름표는 빼고 값(13% · 176초)만 */
+  .hud.mini .gauge-head{justify-content:flex-end}
+}
+main{padding-top:12px}
+
+/* 8비트 게이지 : 막대를 20칸으로 나누고 한 칸씩 늘고 준다. 시간이 10초 남으면 빨간 칸이 1초에 2번 깜빡인다 */
+.meter{height:12px;border:0;border-radius:0;background:rgba(217,255,246,.13);
+  -webkit-mask:repeating-linear-gradient(90deg,#000 0 calc(5% - 2px),transparent calc(5% - 2px) 5%);
+  mask:repeating-linear-gradient(90deg,#000 0 calc(5% - 2px),transparent calc(5% - 2px) 5%)}
+.meter>i{border-radius:0;box-shadow:none;transition:width .24s steps(3,end)}
+#timeFill{transition:none}
+.meter>i.danger{background:var(--pink);box-shadow:none;animation:dangerBlink .5s steps(2,start) infinite}
+@keyframes dangerBlink{50%{opacity:.35}}
+.meter.gain>i{animation:gainPop .36s steps(3,end)}
+@keyframes gainPop{50%{filter:brightness(1.9)}}
+
+/* 안내문 : 처음 하는 단계만 펼치고, 그 뒤로는 한 줄 요약 + '자세히'. 왼쪽에는 반응하는 작은 수탐이 */
+.brief{padding:8px 10px 8px 12px;margin-bottom:12px;align-items:center;gap:12px}
+.brief-body{flex:1;min-width:0}
+.brief-short{font-size:.92rem;line-height:1.5;color:var(--ink);font-weight:800;word-break:keep-all}
+.brief.open .brief-short,.brief:not(.open) #instructionText{display:none}
+.brief-more{flex:none;display:inline-flex;align-items:center;gap:4px;min-height:36px;padding:6px 10px;cursor:pointer;
+  font-size:.8rem;font-weight:800;color:var(--cyan);background:transparent;border:1px solid rgba(0,240,255,.35)}
+.brief-more .icon{width:1em;height:1em}
+.brief.open .brief-more .icon{transform:rotate(180deg)}
+.brief.solo .brief-more{display:none}
+.coach{position:relative;width:46px;height:46px;flex:none}
+.coach[hidden]{display:none}
+.coach img{display:block;width:100%;height:100%;object-fit:contain;transform:scale(1.3);transform-origin:50% 62%}
+.coach-sign{position:absolute;right:-8px;top:-6px;width:20px;height:20px;display:grid;place-items:center;opacity:0;
+  font:900 .78rem var(--mono);color:#031014;background:var(--green);pointer-events:none}
+.coach.ok .coach-sign{animation:signPop .9s ease-out both}
+.coach.no .coach-sign{background:var(--pink);color:#2a0710;animation:signPop .9s ease-out both}
+.coach.ok img{animation:coachHop .5s cubic-bezier(.3,.7,.4,1)}
+.coach.no img{animation:coachShiver .4s ease-in-out}
+@keyframes coachHop{0%,100%{translate:0 0}30%{translate:0 -9px}60%{translate:0 0}80%{translate:0 -4px}}
+@keyframes coachShiver{0%,100%{translate:0 0}20%{translate:-3px 0}40%{translate:3px 0}60%{translate:-3px 0}80%{translate:2px 0}}
+@keyframes signPop{0%{opacity:1;transform:scale(0)}30%{opacity:1;transform:scale(1.3)}50%{opacity:1;transform:scale(1)}
+  85%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1)}}
+@media(max-width:560px){.coach{width:38px;height:38px}.brief-short{font-size:.86rem}}
+
+/* 세로 화면(≤900px) — 답 고르는 칸을 화면 아래에 붙여 두어, 위에서 숫자를 읽으며 바로 고를 수 있게 한다 */
+@media(min-width:561px) and (max-width:900px){
+  #stageTwo .data-duo{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+  #stageTwo .data-duo>div+div{margin-top:0}
+  #stageThree .art{width:min(250px,100%)}
+}
+@media(max-width:900px){
+  #stageTwo>.card:last-child,#stageThree>.card:last-child,#stageFive>.card:last-child,#stageFinal>.card:last-child{
+    position:sticky;bottom:0;z-index:12;background:#06141a;box-shadow:0 -12px 28px rgba(0,3,5,.85);padding:12px 14px}
+  #stageFive>.card:last-child>.card-head{display:none}
+  #stageTwo>.card:last-child>.card-head,#stageThree>.card:last-child>.card-head{display:none}
+  #stageTwo>.card:last-child .choices,#stageThree>.card:last-child .choices{margin-bottom:10px}
+  /* 최종 단계 아래 칸은 높이를 바짝 줄인다 : 제목 줄 숨김(진행은 해커 HP 가 보여 줌), 좌표와 값을 한 줄에 */
+  #stageFinal .boss{margin-bottom:8px;padding:5px 10px}
+  #stageFinal .boss-av{width:30px;height:30px}
+  #stageFinal .boss-head{margin-bottom:4px}
+  #stageFinal>.card:last-child>.card-head{display:none}
+  #stageFinal>.card:last-child .note{display:flex;flex-wrap:wrap;align-items:center;gap:2px 16px;margin-top:0;padding:6px 12px}
+  #stageFinal>.card:last-child .note .note-label{display:none}
+  #pkCoord{font-size:1.15rem !important;margin-top:0}
+  #pkData{margin-top:0 !important}
+  #pkData .big-value{font-size:1.15rem !important;margin-top:0}
+  #pkData>div{margin-top:0 !important}
+  #pkData .pk-swatch{width:38px;height:38px}
+  #pkStatus{margin:8px 0 0 !important;padding:6px 10px;line-height:1.45;font-size:.8rem}
+  #pkChoices{margin-top:8px !important;margin-bottom:0}
+  #pkChoices.tiles{margin-bottom:24px}
+}
+/* 폰(≤560px) : 1단계도 위아래로 쌓이므로 픽셀 격자를 아래에 붙인다 */
+@media(max-width:560px){
+  #stageOne>.card:last-child{position:sticky;bottom:0;z-index:12;background:#06141a;box-shadow:0 -12px 28px rgba(0,3,5,.85);padding:12px 14px}
+  #stageOne>.card:last-child>.card-head,#stageOne>.card:last-child>.art-cap{display:none}
+}
+/* 최종 단계 15×15 그림은 화면 높이에 맞춰 줄여 맨 아래 줄까지 한 화면에 들어오게 (--fin-reserve = 그림 밖 세로 공간) */
+.fgrid{max-width:min(720px, calc(100vh - var(--fin-reserve,262px)));max-width:min(720px, calc(100dvh - var(--fin-reserve,262px)))}
+@media(max-width:900px){.fgrid{--fin-reserve:520px}}
+
+/* 8비트 버튼 : 아래쪽 두께가 있고, 누르면 쑥 들어간다 */
+.btn:not(.btn-ghost){box-shadow:0 4px 0 rgba(0,0,0,.55)}
+.btn-primary{box-shadow:0 4px 0 #0e7445,0 8px 26px rgba(57,255,136,.22)}
+@media(hover:hover){
+  .btn:not(.btn-ghost):hover{box-shadow:0 6px 0 rgba(0,0,0,.55)}
+  .btn-primary:hover{box-shadow:0 6px 0 #0e7445,0 10px 30px rgba(57,255,136,.32)}
+  .choice:hover:not(:disabled){box-shadow:0 7px 0 rgba(0,0,0,.5),0 0 18px rgba(57,255,136,.24)}
+}
+.btn:not(.btn-ghost):active,.btn-primary:active{transform:translateY(4px);box-shadow:0 0 0 rgba(0,0,0,.55)}
+.btn:disabled{box-shadow:none}
+.choice{box-shadow:0 4px 0 rgba(0,0,0,.5)}
+.choice:active:not(:disabled){transform:translateY(4px);box-shadow:0 0 0 rgba(0,0,0,.5)}
+
+/* 연출 층 : 네모 파편 · 떠오르는 점수 · 힌트 말풍선 (누르기를 막지 않는다) */
+#fxLayer{position:fixed;inset:0;pointer-events:none;z-index:85;overflow:hidden}
+.fx-pt{position:absolute;width:7px;height:7px;margin:-3.5px 0 0 -3.5px}
+.fx-float{position:absolute;font-family:var(--mono);font-weight:900;font-size:1.05rem;white-space:nowrap;
+  text-shadow:0 2px 0 rgba(0,0,0,.7)}
+.fx-float.good{color:var(--green)} .fx-float.score{color:var(--amber)} .fx-float.bad{color:var(--pink)}
+.fx-tip{position:absolute;padding:6px 11px;font-size:.86rem;font-weight:800;white-space:nowrap;
+  background:#2a0710;border:1px solid var(--pink);color:#ffd6de;transform:translate(-50%,-100%)}
+.fx-tip.info{background:#06202a;border-color:var(--cyan);color:#d6f9ff}
+.fx-tip::after{content:"";position:absolute;left:calc(50% + var(--ax,0px));top:100%;width:9px;height:9px;margin:-4px 0 0 -4.5px;
+  background:inherit;border-right:1px solid;border-bottom:1px solid;border-color:inherit;transform:rotate(45deg)}
+.fx-tip.below{transform:translate(-50%,0)}
+.fx-tip.below::after{top:0;transform:rotate(225deg)}
+
+/* 리포트 등급 도장 · 엔딩 기록 */
+#modalGrade.slam{animation:gradeSlam .3s steps(4,end) .35s both;transform-origin:100% 50%}   /* 오른쪽 끝을 기준으로 커져 창 밖으로 삐져나가지 않게 */
+@keyframes gradeSlam{from{transform:scale(2.6);opacity:0}to{transform:scale(1);opacity:1}}
+.modal.shake{animation:popIn .35s cubic-bezier(.175,.885,.32,1.275) both,modalShake .2s steps(4,end) .64s}
+@keyframes modalShake{0%,100%{translate:0 0}25%{translate:-4px 2px}50%{translate:4px -2px}75%{translate:-2px 1px}}
+.final-stats{margin-top:4px;font-weight:800;color:var(--ink-dim);font-size:.95rem}
+.final-stats b{font-family:var(--mono);color:var(--amber)}
+
+/* 설정 창 : 소리 · 화면 · 이야기 묶음 제목 */
+.snd-sec{font-size:.74rem;font-weight:800;letter-spacing:.14em;color:var(--green);margin:8px 2px -2px}
+.snd-sec:first-child{margin-top:0}
+
+/* '글씨 크게' — rem 으로 잡은 글자·간격이 함께 12.5% 커진다 */
+html.big-text{font-size:112.5%}
+/* '움직임 줄이기' — 기기의 '동작 줄이기' 설정과 똑같이 움직임을 거의 없앤다 (자바스크립트 연출은 motionOK() 로 끈다) */
+html.calm-motion *,html.calm-motion *::before,html.calm-motion *::after{animation-duration:.01ms !important;
+  animation-iteration-count:1 !important;transition-duration:.01ms !important;scroll-behavior:auto !important}
+html.calm-motion .scanline{display:none}
+
+/* =========================================================================
+   시작 화면 단순화 (2026-11-17) — 넓고 반짝이는 '작전 시작' 버튼 · 한글 이름만 남긴 모드 카드 · 모드 소개 창
+   (반짝임은 부드럽게 흐르는 반복 연출이라 누르기를 막지 않는다. '움직임 줄이기'면 멈춘다)
+   ========================================================================= */
+.start-cta{position:relative;width:min(460px,100%);margin:28px auto 0}
+#startButton{position:relative;overflow:hidden;width:100%;padding:19px 30px;font-size:1.3rem;letter-spacing:.02em;
+  animation:ctaGlow 2.4s ease-in-out infinite}
+#startButton::after{content:"";position:absolute;top:-20%;bottom:-20%;left:0;width:32%;pointer-events:none;
+  background:linear-gradient(100deg,rgba(255,255,255,0),rgba(255,255,255,.7),rgba(255,255,255,0));
+  transform:translateX(-140%) skewX(-18deg);animation:ctaShine 2.4s ease-in-out infinite}
+@keyframes ctaShine{0%,15%{transform:translateX(-140%) skewX(-18deg)}65%,100%{transform:translateX(360%) skewX(-18deg)}}
+@keyframes ctaGlow{0%,100%{box-shadow:0 4px 0 #0e7445,0 8px 24px rgba(57,255,136,.22)}
+  50%{box-shadow:0 4px 0 #0e7445,0 8px 44px rgba(57,255,136,.6)}}
+#startButton:active{animation:none}
+.cta-spark{position:absolute;width:14px;height:14px;color:#fff;opacity:0;pointer-events:none;
+  filter:drop-shadow(0 0 6px rgba(57,255,136,.9));animation:ctaSpark 2.4s ease-in-out infinite}
+.cta-spark svg{display:block;width:100%;height:100%}
+.cta-spark.s1{left:-7px;top:-8px}
+.cta-spark.s2{right:18%;top:-11px;width:10px;height:10px;color:var(--amber);animation-delay:.8s}
+.cta-spark.s3{right:-6px;bottom:-5px;animation-delay:1.6s}
+@keyframes ctaSpark{0%,100%{opacity:0;transform:scale(.3)}45%{opacity:1;transform:scale(1)}70%{opacity:0;transform:scale(.6)}}
+/* 시작 카드 폭을 줄여(최대 660px) 뒤로 떨어지는 숫자(코드 레인)가 양옆으로 더 많이 보이게 한다.
+   카드가 좁아진 만큼 수탐이와 제목도 조금 줄여 한 줄에 나란히 들어가게 */
+.start-card{width:min(660px,100%);margin:0 auto;padding:clamp(26px,5vw,44px) clamp(18px,4vw,40px);
+  box-shadow:0 0 56px rgba(3,10,14,.85),0 0 36px rgba(57,255,136,.08)}
+.start-card .hero-row{gap:clamp(10px,2vw,20px)}
+.start-card .mascot{width:clamp(72px,10vw,118px)}
+.start-card .hero-title{font-size:clamp(1.7rem,5vw,3rem)}
+.mode-cards{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;max-width:640px;margin:22px auto 0}
+.mode-card{display:grid;place-items:center;text-align:center;padding:16px 10px;min-height:62px}
+.mode-card .mc-t{display:inline-flex;align-items:center;gap:9px;font-size:1.06rem;word-break:keep-all}
+.mc-ic{width:20px;height:20px;flex:none}      /* 모드 아이콘 : 5×5 픽셀 그림 (계단 · 하트 · 네 색 픽셀) */
+@media(max-width:520px){.mode-cards{grid-template-columns:1fr}}
+.start-sub{margin-top:16px}
+/* 모드 소개 창 : 모드에 들어갈 때 설명 · 기록을 보여 주고 시작한다 */
+.mode-title{font-family:var(--mono);font-size:1.7rem;font-weight:800;color:#fff}
+.mode-desc{margin-top:12px;color:var(--ink-dim);line-height:1.75;font-size:.98rem;word-break:keep-all}
+.mode-info{margin-top:12px;font-weight:800;font-size:.92rem;color:var(--ink)}
+.mode-info.lock{color:#ffc2cd}
+.mode-btns{display:flex;gap:10px;justify-content:center;margin-top:22px;flex-wrap:wrap}
+
 @media(prefers-contrast:more){
   :root{--ink-dim:rgba(217,255,246,.9);--ink-faint:rgba(217,255,246,.75);--line:rgba(0,240,255,.5)}
 }
@@ -961,44 +1149,29 @@ details[open]>.mixer-head .chev{transform:rotate(180deg)}
    </div>
 
 
-   <button id="startButton" class="btn btn-primary btn-lg" style="margin-top:24px">
-    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 3 14h8l-1 8 10-12h-8z"/></svg>
-    작전 시작
-   </button>
-   <p class="hud-label" id="startFoot" style="margin-top:16px;color:var(--ink-faint);letter-spacing:0;text-transform:none">
-    만점 10,000점 · 방향키와 Enter 로도 플레이할 수 있습니다
-   </p>
+   <!-- 넓고 반짝이는 '작전 시작' 버튼 (빛줄기가 훑고 지나가고, 모서리에 픽셀 별이 반짝인다) -->
+   <div class="start-cta">
+    <button id="startButton" class="btn btn-primary btn-lg">
+     <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 3 14h8l-1 8 10-12h-8z"/></svg>
+     작전 시작
+    </button>
+    <i class="cta-spark s1" aria-hidden="true"><svg viewBox="0 0 5 5" fill="currentColor" shape-rendering="crispEdges"><path d="M2 0h1v5H2zM0 2h5v1H0z"/></svg></i>
+    <i class="cta-spark s2" aria-hidden="true"><svg viewBox="0 0 5 5" fill="currentColor" shape-rendering="crispEdges"><path d="M2 0h1v5H2zM0 2h5v1H0z"/></svg></i>
+    <i class="cta-spark s3" aria-hidden="true"><svg viewBox="0 0 5 5" fill="currentColor" shape-rendering="crispEdges"><path d="M2 0h1v5H2zM0 2h5v1H0z"/></svg></i>
+   </div>
 
+   <!-- 모드 카드는 한글 이름만 — 설명은 들어가면 나오는 창에서 보여 준다 -->
    <div class="stage-cards mode-cards">
-    <button type="button" id="practiceCard" class="stage-card mode-card">
-     <span class="no" style="color:var(--cyan)">PRACTICE</span>
-     <span class="mc-t">단계 연습</span>
-     <span class="mc-d">원하는 단계만 골라 다시 도전하고 별을 모으세요.</span>
-     <span class="meta" id="starTotal">★ 0 / 15</span>
-    </button>
-    <button type="button" id="survivalCard" class="stage-card mode-card">
-     <span class="no" style="color:var(--pink)">SURVIVAL</span>
-     <span class="mc-t">서바이벌 <span id="survLock" class="lock-tag">잠김</span></span>
-     <span class="mc-d">하트 3개로 버티는 무한 모드. 레벨이 오를수록 어려워집니다.</span>
-     <span class="meta" id="survCardMeta">본편을 끝까지 한 번 마치면 열립니다</span>
-    </button>
-    <button type="button" id="workshopCard" class="stage-card mode-card">
-     <span class="no" style="color:var(--amber)">WORKSHOP</span>
-     <span class="mc-t">픽셀 퍼즐 공방</span>
-     <span class="mc-d">5×5 그림을 그려 문제 코드를 만들고 친구와 바꿔 풀어 보세요.</span>
-     <span class="meta">만들기 · 풀기</span>
-    </button>
+    <button type="button" id="practiceCard" class="stage-card mode-card"><span class="mc-t"><svg class="mc-ic" viewBox="0 0 5 5" fill="#00f0ff" shape-rendering="crispEdges" aria-hidden="true"><path d="M4 0h1v1H4zM3 1h2v1H3zM2 2h3v1H2zM1 3h4v1H1zM0 4h5v1H0z"/></svg>단계 연습</span></button>
+    <button type="button" id="survivalCard" class="stage-card mode-card"><span class="mc-t"><svg class="mc-ic" viewBox="0 0 5 5" fill="#ff4d6d" shape-rendering="crispEdges" aria-hidden="true"><path d="M1 0h1v1H1zM3 0h1v1H3zM0 1h5v2H0zM1 3h3v1H1zM2 4h1v1H2z"/></svg>서바이벌 <span id="survLock" class="lock-tag">잠김</span></span></button>
+    <button type="button" id="workshopCard" class="stage-card mode-card"><span class="mc-t"><svg class="mc-ic" viewBox="0 0 5 5" shape-rendering="crispEdges" aria-hidden="true"><path fill="#39ff88" d="M0 0h2v2H0z"/><path fill="#ffd240" d="M3 0h2v2H3z"/><path fill="#00f0ff" d="M0 3h2v2H0z"/><path fill="#ff4d6d" d="M3 3h2v2H3z"/></svg>픽셀 퍼즐 공방</span></button>
    </div>
    <div class="start-sub">
     <button type="button" id="badgeButton" class="btn">
      <span class="px-ic" id="badgeBtnIcon" style="color:var(--amber)"></span>배지 도감
      <span id="badgeCount" class="mono">0 / 12</span></button>
     <button type="button" id="soundButton" class="btn">
-     <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4zM16 9l2.5 3-2.5 3"/></svg>소리 설정</button>
-    <div class="chip-toggle" role="group" aria-label="스토리 연출">
-     <button type="button" data-story="on" aria-pressed="true">스토리 켜기</button>
-     <button type="button" data-story="off" aria-pressed="false">끄기</button>
-    </div>
+     <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h11M19 6h2M3 12h4M12 12h9M3 18h13M21 18h0"/><path d="M14 4h5v4h-5zM7 10h5v4H7zM16 16h5v4h-5z"/></svg>설정</button>
    </div>
   </div>
  </div>
@@ -1044,9 +1217,13 @@ details[open]>.mixer-head .chev{transform:rotate(180deg)}
 
  <main>
   <div class="wrap">
-   <div class="glass brief">
-    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18"/><path d="M12 16v-5M12 8h.01"/></svg>
-    <p id="instructionText">준비 중…</p>
+   <div class="glass brief" id="briefBox">
+    <div class="coach" id="coach" aria-hidden="true"><img id="coachImg" alt=""><b class="coach-sign" id="coachSign"></b></div>
+    <div class="brief-body">
+     <p id="briefShort" class="brief-short"></p>
+     <p id="instructionText">준비 중…</p>
+    </div>
+    <button type="button" id="briefToggle" class="brief-more" aria-expanded="false" aria-controls="instructionText"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>자세히</button>
    </div>
 
    <!-- ---------- Stage 1 · 이진 행렬 ---------- -->
@@ -1349,7 +1526,7 @@ details[open]>.mixer-head .chev{transform:rotate(180deg)}
    <button id="simplePrimary" class="btn btn-primary">계속하기</button>
   </div>
   <button type="button" id="simpleSound" class="btn btn-ghost simple-sound" hidden>
-   <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4zM16 9l2.5 3-2.5 3"/></svg>소리 설정</button>
+   <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h11M19 6h2M3 12h4M12 12h9M3 18h13M21 18h0"/><path d="M14 4h5v4h-5zM7 10h5v4H7zM16 16h5v4h-5z"/></svg>설정</button>
  </div>
 </div>
 
@@ -1357,13 +1534,27 @@ details[open]>.mixer-head .chev{transform:rotate(180deg)}
 <div id="practiceModal" class="backdrop" role="dialog" aria-modal="true" aria-labelledby="practiceTitle">
  <div class="modal" style="width:min(620px,100%)">
   <div class="modal-top">
-   <div><p class="kicker">STAGE SELECT</p><h2 id="practiceTitle">단계 연습</h2></div>
+   <div><h2 id="practiceTitle">단계 연습</h2></div>
    <button type="button" class="btn btn-icon btn-ghost modal-x" data-close aria-label="닫기">
     <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   </div>
-  <p class="ref-note">원하는 단계만 골라 새 문제로 도전합니다. 별 기록은 이 기기에 저장됩니다.<br>
-   <span class="stars">★</span> 클리어 · <span class="stars">★★</span> 오답·힌트 없이 클리어 · <span class="stars">★★★</span> S 등급</p>
+  <p class="ref-note">원하는 단계만 골라 새 문제로 다시 도전하고 별을 모으세요. 모은 별 <b id="practiceStars" class="mono">0 / 15</b><br>
+   <span class="stars">★</span> 클리어 · <span class="stars">★★</span> 오답·힌트 없이 클리어 · <span class="stars">★★★</span> S 등급 · 기록은 이 기기에 저장됩니다.</p>
   <div id="practiceList" class="practice-list"></div>
+ </div>
+</div>
+
+<!-- ===================== 모드 소개 (서바이벌) — 들어가기 전에 설명·기록을 보여 준다 ===================== -->
+<div id="modeModal" class="backdrop" role="dialog" aria-modal="true" aria-labelledby="modeTitle">
+ <div class="modal" style="width:min(460px,100%);text-align:center">
+  <img id="modeChar" class="simple-char" alt="" hidden>
+  <h2 id="modeTitle" class="mode-title">서바이벌</h2>
+  <p id="modeDesc" class="mode-desc"></p>
+  <p id="modeInfo" class="mode-info"></p>
+  <div class="mode-btns">
+   <button type="button" id="modeCancel" class="btn">닫기</button>
+   <button type="button" id="modeGo" class="btn btn-primary">시작하기</button>
+  </div>
  </div>
 </div>
 
@@ -1384,10 +1575,11 @@ details[open]>.mixer-head .chev{transform:rotate(180deg)}
 <div id="workshopModal" class="backdrop" role="dialog" aria-modal="true" aria-labelledby="wsTitle">
  <div class="modal" style="width:min(860px,100%)">
   <div class="modal-top">
-   <div><p class="kicker">PIXEL WORKSHOP</p><h2 id="wsTitle">픽셀 퍼즐 공방</h2></div>
+   <div><h2 id="wsTitle">픽셀 퍼즐 공방</h2></div>
    <button type="button" class="btn btn-icon btn-ghost modal-x" data-close aria-label="닫기">
     <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   </div>
+  <p class="ref-note">5×5 그림을 그려 문제 코드를 만들고, 친구와 코드를 바꿔 서로의 그림을 복원해 보세요.</p>
   <div class="chip-toggle ws-tabs" role="group" aria-label="공방 메뉴">
    <button type="button" data-ws="make" aria-pressed="true">문제 만들기</button>
    <button type="button" data-ws="solve" aria-pressed="false">친구 문제 풀기</button>
@@ -1442,11 +1634,12 @@ details[open]>.mixer-head .chev{transform:rotate(180deg)}
 <div id="soundModal" class="backdrop" role="dialog" aria-modal="true" aria-labelledby="soundTitle">
  <div class="modal" style="width:min(560px,100%)">
   <div class="modal-top">
-   <div><p class="kicker">SOUND</p><h2 id="soundTitle">소리 설정</h2></div>
+   <div><p class="kicker">SETTINGS</p><h2 id="soundTitle">설정</h2></div>
    <button type="button" class="btn btn-icon btn-ghost modal-x" data-close aria-label="닫기">
     <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   </div>
   <div class="snd-list">
+   <p class="snd-sec">소리</p>
    <div class="snd-row"><p class="snd-k">효과음<small>정답·오답·클리어·대사 소리</small></p>
     <div class="chip-toggle" role="group" aria-label="효과음">
      <button type="button" data-snd="sfx:1">켜기</button><button type="button" data-snd="sfx:0">끄기</button></div></div>
@@ -1462,6 +1655,17 @@ details[open]>.mixer-head .chev{transform:rotate(180deg)}
    <div class="snd-row" id="vibeRow" hidden><p class="snd-k">진동<small>오답·하트·클리어 때 기기가 떨립니다 (소리를 꺼도 작동)</small></p>
     <div class="chip-toggle" role="group" aria-label="진동">
      <button type="button" data-snd="vibe:1">켜기</button><button type="button" data-snd="vibe:0">끄기</button></div></div>
+   <p class="snd-sec">화면</p>
+   <div class="snd-row"><p class="snd-k">움직임 줄이기<small>튀는 파편·흔들림·깜빡임을 줄입니다</small></p>
+    <div class="chip-toggle" role="group" aria-label="움직임 줄이기">
+     <button type="button" data-view="motion:1">켜기</button><button type="button" data-view="motion:0">끄기</button></div></div>
+   <div class="snd-row"><p class="snd-k">글씨 크게<small>글자와 버튼을 조금 키웁니다</small></p>
+    <div class="chip-toggle" role="group" aria-label="글씨 크게">
+     <button type="button" data-view="big:1">켜기</button><button type="button" data-view="big:0">끄기</button></div></div>
+   <p class="snd-sec">이야기</p>
+   <div class="snd-row"><p class="snd-k">스토리 연출<small>수탐이와 글리치 해커의 대화</small></p>
+    <div class="chip-toggle" role="group" aria-label="스토리 연출">
+     <button type="button" data-story="on" aria-pressed="true">켜기</button><button type="button" data-story="off" aria-pressed="false">끄기</button></div></div>
   </div>
   <div class="snd-foot">
    <button type="button" id="sndTest" class="btn">
@@ -1495,6 +1699,8 @@ details[open]>.mixer-head .chev{transform:rotate(180deg)}
  </div>
 </div>
 <div id="badgePop" class="badge-pop" role="status" aria-live="polite" hidden></div>
+<!-- 연출 층 (파편·떠오르는 점수·힌트 말풍선) -->
+<div id="fxLayer" aria-hidden="true"></div>
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 </div>
@@ -1732,7 +1938,8 @@ const S = {
   quizRight: 0, runBadges: [], briefed: {}, introPending: false,
   surv:  { hearts: 3, correct: 0, level: 1, q: null, locked: false, last: null },
   paint: { cells: [], bg: 0, done: [], sel: null },
-  custom: null, customFromCode: false
+  custom: null, customFromCode: false,
+  stats: { px: 0, nums: 0 }  // 엔딩에 보여 주는 기록 : 복원한 픽셀 수 · 되살린 숫자 수
 };
 
 /* =========================================================================
@@ -2069,6 +2276,12 @@ const sfx = {
       else this.tone(N(d > 0 ? 64 : 71), Math.abs(d) > 60 ? "square" : "p25", 0.12, 0.035, at, N(d > 0 ? 71 : 64));
     });
   },
+  /** 리포트 등급 도장이 '쿵' (클리어 도장보다 작게) */
+  slam() {
+    if (!this.on()) return;
+    this.tone(130, "square", 0.1, 0.05, 0, 70);
+    this.noise(0.08, 0.05, 0, 400, "lowpass");
+  },
   /** 소리 설정의 '소리 들어 보기' */
   demo() {
     if (!this.on()) return;
@@ -2275,8 +2488,8 @@ const rain = {
   start() {
     if (this.on) return;
     if (!this.ctx && !this.init()) return;
-    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      /* 모션을 줄이는 설정이면 한 프레임만 그리고 멈춘다 */
+    if (prefersReducedMotion()) {
+      /* 모션을 줄이는 설정(기기 또는 게임 설정)이면 한 프레임만 그리고 멈춘다 */
       this.cv.hidden = false; this.resize(); this.on = true;
       this.frame(performance.now()); this.on = false; this.raf = null;
       return;
@@ -2424,7 +2637,8 @@ function resumeTimer() {
 function paintTime() {
   const secs = Math.ceil(S.timeLeft);
   const fill = $("timeFill"), txt = $("timeText");
-  fill.style.width = (S.timeTotal ? (S.timeLeft / S.timeTotal) * 100 : 0) + "%";
+  /* 남은 시간 막대도 20칸 — 한 칸씩 사라진다 */
+  fill.style.width = (S.timeTotal ? Math.ceil(S.timeLeft / S.timeTotal * 20) * 5 : 0) + "%";
   if (secs !== S.lastShown) {
     S.lastShown = secs;
     txt.textContent = secs + "초";
@@ -2460,29 +2674,26 @@ function onTimeUp() {
 /* =========================================================================
    8. 공통 화면 제어
    ========================================================================= */
+/** 복원율 막대는 20칸 — 5% 단위로 칸이 채워지고, 늘어난 순간 칸이 번쩍인다 */
 function setRestore(pct) {
-  const p = clamp(Math.round(pct), 0, 100);
+  const p = clamp(Math.round(pct), 0, 100), prev = parseInt($("restorePercent").textContent, 10) || 0;
   $("restorePercent").textContent = p + "%";
-  $("restoreFill").style.width = p + "%";
+  $("restoreFill").style.width = (Math.round(p / 5) * 5) + "%";
+  if (p > prev && motionOK()) { const m = $("restoreFill").parentElement; m.classList.remove("gain"); void m.offsetWidth; m.classList.add("gain"); }
 }
 function setRestoreLabel(t) { $("restoreLabel").textContent = t; }
+/** 본편 진행 칸 : 제목 옆에 단계 번호 다섯 칸 (지난 단계 · 지금 · 남은 단계). 연습·서바이벌·친구 문제는 제목만으로 충분해 숨긴다 */
 function renderSteps() {
   const box = $("steps"); box.innerHTML = "";
-  if (S.mode !== "campaign") {           /* 연습·서바이벌·친구 문제는 지금 하는 것 하나만 표시 */
-    const el = document.createElement("span");
-    el.className = "step now"; el.setAttribute("aria-current", "step");
-    el.innerHTML = '<span class="dot"></span>';
-    el.appendChild(document.createTextNode(
-      S.mode === "practice" ? "단계 연습 · " + (S.cur ? S.cur.chip : "") :
-      S.mode === "survival" ? "서바이벌 · LV " + S.surv.level : "친구 문제"));
-    box.appendChild(el);
-    return;
-  }
+  box.hidden = S.mode !== "campaign";
+  if (box.hidden) return;
   ROUNDS.forEach((r, i) => {
     const el = document.createElement("span");
+    const name = r.chip.replace(/^\S+\s/, "");
     el.className = "step" + (i < S.round ? " done" : i === S.round ? " now" : "");
-    el.innerHTML = '<span class="dot"></span>';
-    el.appendChild(document.createTextNode(r.chip));
+    el.textContent = i + 1;
+    el.title = name;
+    el.setAttribute("aria-label", (i + 1) + "단계 " + name + (i < S.round ? " 완료" : i === S.round ? " 진행 중" : ""));
     if (i === S.round) el.setAttribute("aria-current", "step");
     box.appendChild(el);
   });
@@ -2491,7 +2702,24 @@ function showPane(id) {
   ["stageOne","stageTwo","stageThree","stageFour","stageFive","stageFinal","stageSurvival","stagePaint"]
     .forEach(p => { $(p).hidden = (p !== id); });
 }
-function setBrief(html) { $("instructionText").innerHTML = html; }
+/** 안내문 : short(한 줄 요약)가 있으면 처음 하는 단계(kind)만 펼쳐 보여 주고, 그 뒤로는 접어서 시작한다.
+    short 가 없으면(결과 화면 등) 접을 것 없이 전문만 보인다 */
+function setBrief(html, short, kind) {
+  $("instructionText").innerHTML = html;
+  const box = $("briefBox");
+  box.classList.toggle("solo", !short);
+  $("briefShort").textContent = short || "";
+  if (!short) { box.classList.add("open"); return; }
+  const first = !!kind && !META.seen[kind];
+  if (first) { META.seen[kind] = true; saveMeta(); }
+  setBriefOpen(first);
+}
+function setBriefOpen(open) {
+  const box = $("briefBox"), t = $("briefToggle");
+  box.classList.toggle("open", open);
+  t.setAttribute("aria-expanded", String(open));
+  t.lastChild.textContent = open ? "접기" : "자세히";
+}
 
 /** 숫자 행렬 그리기 — 5×5, marks 로 칸별 클래스 지정 */
 function paintNumGrid(el, data, marks) {
@@ -2588,16 +2816,19 @@ function link(i, on) {
 function onPixelClick(btn, i, v, size) {
   if (!S.running || S.paused || S.binary.onCells.has(i)) return;
   if (v === 1) {
-    sfx.good();
+    sfx.good(); coachSet("ok");
     S.binary.onCells.add(i);
+    addStats(1, 1);
     btn.classList.add("on"); btn.setAttribute("aria-pressed", "true");
     const mc = $("matrixViewer").querySelector('.mcell[data-idx="' + i + '"]');
     if (mc) mc.classList.add("filled");
+    burstAt(btn, ["#ecfff8", "#39ff88", "#00f0ff"], 8);
     setRestore(S.binary.onCells.size / S.binary.total * 100);
     if (S.binary.onCells.size === S.binary.total) finishBinary();
   } else {
-    sfx.bad(); S.misses++;
+    sfx.bad(); S.misses++; coachSet("no");
     btn.classList.add("miss");
+    hintAt(btn, "이 칸은 0", "bad"); floatAt(btn, penaltyText(), "bad");
     toast("행 " + (Math.floor(i/size) + 1) + ", 열 " + (i%size + 1) + " 의 값은 0입니다 (" + missNote() + ")", "bad");
     setTimeout(() => btn.classList.remove("miss"), 320);
   }
@@ -2687,7 +2918,7 @@ function renderGray() {
     } else {
       const v = P.d[r][c];
       px.style.background = hex(v, v, v);
-      if (ti >= 0) px.classList.add("just");
+      if (ti >= 0 && ti === S.gray.idx - 1) px.classList.add("just");   /* 방금 복원한 칸만 */
       px.setAttribute("aria-label", "행 " + (r + 1) + " 열 " + (c + 1) + " 밝기 " + v);
     }
     art.appendChild(px);
@@ -2713,15 +2944,24 @@ function tryGray(val, btn) {
   if (!S.running || S.paused) return;
   const t = S.puzzle.targets[S.gray.idx];
   if (Math.abs(val - t.v) <= TOL_GRAY) {
-    sfx.good();
+    sfx.good(); coachSet("ok");
+    const tile = rectOf(btn);
     S.gray.solved[S.gray.idx] = true;
     toast("밝기 " + t.v + " 복원 완료!", "good");
     S.gray.idx++;
-    if (S.gray.idx >= S.puzzle.targets.length) { renderGray(); finishRound(); }
-    else { sfx.level(t.v, 0.18); renderGray(); renderGrayChoices(); resetGraySlider(); }   /* 맞힌 밝기를 음높이로 */
+    addStats(1, 1);
+    const last = S.gray.idx >= S.puzzle.targets.length;
+    renderGray();
+    burstAt(tile, ["#ecfff8", "#39ff88", "#00f0ff"], 10);
+    floatAt(tile, "+" + Math.round(100 / S.puzzle.targets.length) + "%", "good");
+    if (last) finishRound();
+    else { sfx.level(t.v, 0.18); renderGrayChoices(); resetGraySlider(); }   /* 맞힌 밝기를 음높이로 */
   } else {
-    sfx.bad(); S.misses++;
-    if (btn) { btn.classList.add("bad"); setTimeout(() => btn.classList.remove("bad"), 320); }
+    sfx.bad(); S.misses++; coachSet("no");
+    if (btn) {
+      btn.classList.add("bad"); setTimeout(() => btn.classList.remove("bad"), 320);
+      hintAt(btn, val < t.v ? "더 밝게 ▲" : "더 어둡게 ▼", "bad"); floatAt(btn, penaltyText(), "bad");
+    }
     toast((val < t.v ? "더 밝아야" : "더 어두워야") + " 합니다 (" + missNote() + ")", "bad");
   }
 }
@@ -2799,7 +3039,7 @@ function renderRgb() {
     } else {
       px.style.background = chanColor(P.d[r][c], chan);
       if (ti >= 0 && !S.rgb.solved[ti] && ti === S.rgb.idx) px.classList.add("target");
-      else if (ti >= 0 && S.rgb.solved[ti] && chan === "all") px.classList.add("just");
+      else if (ti >= 0 && S.rgb.solved[ti] && chan === "all" && ti === S.rgb.idx - 1) px.classList.add("just");   /* 방금 복원한 칸만 */
     }
     art.appendChild(px);
   }
@@ -2827,16 +3067,25 @@ function tryRgb(rgb, btn) {
   const t = S.puzzle.targets[S.rgb.idx];
   const ok = [0,1,2].every(i => Math.abs(rgb[i] - t.v[i]) <= TOL_RGB);
   if (ok) {
-    sfx.good();
+    sfx.good(); coachSet("ok");
+    const tile = rectOf(btn);
     S.rgb.solved[S.rgb.idx] = true;
     toast(t.name + " 픽셀 복원 완료! [" + t.v.join(", ") + "]", "good");
     S.rgb.idx++;
-    if (S.rgb.idx >= S.puzzle.targets.length) { renderRgb(); finishRound(); }
-    else { sfx.mix(t.v, 0.18, 0.5); renderRgb(); renderRgbChoices(); resetRgbSliders(); }   /* 맞힌 색을 도·미·솔 화음으로 */
+    addStats(1, 3);
+    const last = S.rgb.idx >= S.puzzle.targets.length;
+    renderRgb();
+    burstAt(tile, [hex(t.v[0], t.v[1], t.v[2]), "#ecfff8", "#39ff88"], 10);
+    floatAt(tile, "+" + Math.round(100 / S.puzzle.targets.length) + "%", "good");
+    if (last) finishRound();
+    else { sfx.mix(t.v, 0.18, 0.5); renderRgbChoices(); resetRgbSliders(); }   /* 맞힌 색을 도·미·솔 화음으로 */
   } else {
-    sfx.bad(); S.misses++;
+    sfx.bad(); S.misses++; coachSet("no");
     const off = ["R","G","B"].filter((_, i) => Math.abs(rgb[i] - t.v[i]) > TOL_RGB);
-    if (btn) { btn.classList.add("bad"); setTimeout(() => btn.classList.remove("bad"), 320); }
+    if (btn) {
+      btn.classList.add("bad"); setTimeout(() => btn.classList.remove("bad"), 320);
+      hintAt(btn, off.join("·") + " 값이 달라요", "bad"); floatAt(btn, penaltyText(), "bad");
+    }
     toast(off.join(", ") + " 값이 맞지 않습니다 (" + missNote() + ")", "bad");
   }
 }
@@ -3034,9 +3283,10 @@ function tryReverse() {
   setRestore(okArr.filter(Boolean).length / 3 * 100);
 
   if (okArr.every(Boolean)) {
-    sfx.good();
-    $("reverseTargetValue").textContent = "[" + t.join(", ") + "]";
+    sfx.good(); coachSet("ok"); addStats(1, 3);
+    rollDigits($("reverseTargetValue"), "[" + t.join(", ") + "]", 650);     /* 숨겨진 숫자가 굴러가다 멈추며 해독된다 */
     $("reverseTargetValue").classList.remove("pink");
+    burstAt($("reverseSwatch"), [hex(t[0], t[1], t[2]), "#ecfff8", "#39ff88"], 14, 40);
     toast("해독 성공! 눈으로 본 색을 데이터로 되돌렸습니다.", "good");
     finishRound();
     return;
@@ -3049,8 +3299,8 @@ function tryReverse() {
 
   const left = REV_TRIES - S.rev.tries;
   if (left <= 0) {
-    S.running = false; stopTimer(); sfx.fail(); bgm.set("");
-    $("reverseTargetValue").textContent = "[" + t.join(", ") + "]";
+    S.running = false; stopTimer(); sfx.fail(); bgm.set(""); coachSet("no");
+    rollDigits($("reverseTargetValue"), "[" + t.join(", ") + "]", 650);
     $("reverseTargetValue").classList.remove("pink");
     toast("전송 기회를 모두 사용했습니다. 정답은 [" + t.join(", ") + "] 였습니다.", "bad");
     const seq = S.seq;
@@ -3058,6 +3308,7 @@ function tryReverse() {
     return;
   }
   sfx.warmer(diffs, okArr);        /* 채널마다 한 음 : 맞으면 '딩', 올려야 하면 오르는 소리, 내려야 하면 내리는 소리 */
+  coachSet("no"); floatAt($("checkReverseButton"), penaltyText(), "bad");
   toast("아직 다릅니다 · 남은 기회 " + left + "회 (" + missNote() + ")", "bad");
   if (S.misses >= 2 && S.hintUsed < REV_HINT_MAX) $("hintButton").hidden = false;
 }
@@ -3192,6 +3443,7 @@ function onFinalCellTap(cell, r, c) {
     sfx.nope();
     cell.classList.add("shake");
     setTimeout(() => cell.classList.remove("shake"), 320);
+    hintAt(cell, "여기는 (행 " + (r + 1) + ", 열 " + (c + 1) + ")", "info");
     toast("그 칸은 (행 " + (r + 1) + ", 열 " + (c + 1) + ") — 찾는 곳은 (행 " + (pk.r + 1) + ", 열 " + (pk.c + 1) + ")", "info");
   }
 }
@@ -3234,12 +3486,13 @@ function tryPacket(isCorrect, btn) {
   if (!S.running || S.paused) return;
   const pk = S.puzzle.packets[S.fin.idx];
   if (isCorrect) {
-    sfx.good();
+    sfx.good(); coachSet("ok"); addStats(1, 3);
     const cell = $("finGrid").querySelector('.fcell[data-r="' + pk.r + '"][data-c="' + pk.c + '"]');
     if (cell) {
       cell.classList.remove("hole", "lock");
       cell.style.background = pk.hex;
       cell.classList.add("just");
+      burstAt(cell, [pk.hex, "#ecfff8"], 10);
     }
     S.fin.idx++;
     setRestore(S.fin.idx / S.puzzle.packets.length * 100);
@@ -3252,10 +3505,13 @@ function tryPacket(isCorrect, btn) {
       renderPacket();
     }
   } else {
-    sfx.bad(); S.misses++;
+    sfx.bad(); S.misses++; coachSet("no");
     if (pk.type === "cipher") S.fin.cipherMiss++;
     bossLaugh();
-    if (btn) { btn.classList.add("bad"); setTimeout(() => btn.classList.remove("bad"), 320); }
+    if (btn) {
+      btn.classList.add("bad"); setTimeout(() => btn.classList.remove("bad"), 320);
+      hintAt(btn, pk.type === "normal" ? "그 색이 아니에요" : "그 값이 아니에요", "bad"); floatAt(btn, penaltyText(), "bad");
+    }
     toast(pk.type === "normal" ? "그 색이 아닙니다 (" + missNote() + ")"
                                : "그 값이 아닙니다 (" + missNote() + ")", "bad");
   }
@@ -3288,14 +3544,16 @@ function startRound(i) {
     S.puzzle = drawFrom(BANK_M5, "m5");
     showPane("stageOne");
     setBrief("왼쪽 행렬에서 값이 <b>1</b>인 칸이 어디인지 보고, 오른쪽 격자의 <b>같은 자리</b>를 클릭하세요. " +
-             "<b>0</b>은 검은색, <b>1</b>은 흰색 픽셀입니다.");
+             "<b>0</b>은 검은색, <b>1</b>은 흰색 픽셀입니다.",
+             "행렬에서 1인 칸을 찾아 오른쪽 격자의 같은 자리를 누르세요.", "binary");
     renderBinary();
   } else if (r.kind === "gray") {
     S.puzzle = buildGrayPuzzle(drawFrom(BANK_GRAY, "gray"), r.n);
     S.gray.idx = 0; S.gray.solved = new Array(r.n).fill(false);
     showPane("stageTwo");
     setBrief("왼쪽 <b>숫자 행렬</b>에서 초록 테두리 칸의 값을 읽고, 그 밝기에 맞는 색을 <b>1~4번</b> 중에서 고르세요. " +
-             "<b>0은 검정, 255는 흰색</b>입니다. 틀리면 점수가 크게 깎이니 신중하게 고르세요.");
+             "<b>0은 검정, 255는 흰색</b>입니다. 틀리면 점수가 크게 깎이니 신중하게 고르세요.",
+             "초록 테두리 칸의 숫자를 읽고, 그 밝기에 맞는 색을 고르세요.", "gray");
     renderGray(); renderGrayChoices(); resetGraySlider();
   } else if (r.kind === "rgb") {
     S.puzzle = buildRgbPuzzle(drawFrom(BANK_RGB, "rgb"), r.n);
@@ -3305,14 +3563,16 @@ function startRound(i) {
     showPane("stageThree");
     setBrief("컬러 사진은 <b>R·G·B 세 장의 행렬</b>이 겹쳐진 것입니다. 세 행렬에서 초록 테두리 칸의 값을 " +
              "각각 읽어 <b>[R, G, B]</b>가 어떤 색일지 예측한 뒤 <b>1~4번</b> 중에서 고르세요. " +
-             "아래 색 섞기 실험대로 미리 확인해 볼 수 있습니다.");
+             "아래 색 섞기 실험대로 미리 확인해 볼 수 있습니다.",
+             "R·G·B 세 행렬에서 같은 자리 숫자를 읽고, 그 색을 고르세요.", "rgb");
     renderRgb(); renderRgbChoices(); resetRgbSliders();
   } else if (r.kind === "kernel") {
     S.puzzle = buildKernPuzzle(drawFrom(BANK_GRAY, "kern"), r.n);
     S.kern.idx = 0; S.kern.solved = new Array(r.n).fill(false);
     showPane("stageFour");
     setBrief("AI는 이미지 위로 <b>3×3 창</b>을 훑으며 계산을 반복합니다. 오른쪽에 적힌 연산을 " +
-             "직접 계산해 결과 값을 입력하세요. <b>Enter</b> 로도 전송됩니다.");
+             "직접 계산해 결과 값을 입력하세요. <b>Enter</b> 로도 전송됩니다.",
+             "3×3 창의 연산을 계산해 결과 값을 입력하세요.", "kernel");
     renderKern();
   } else if (r.kind === "final") {
     S.puzzle = buildFinalPuzzle();
@@ -3320,15 +3580,18 @@ function startRound(i) {
     resetBoss();
     showPane("stageFinal");
     setBrief("최종 미션입니다. 오른쪽 <b>복구 패킷</b>의 좌표를 이미지에서 찾아 탭하고, " +
-             "제시된 값(또는 색)에 맞게 복원하세요. <b>좌표를 잘못 탭해도 감점은 없습니다.</b>");
+             "제시된 값(또는 색)에 맞게 복원하세요. <b>좌표를 잘못 탭해도 감점은 없습니다.</b>",
+             "패킷 좌표를 이미지에서 찾아 탭하고, 값(또는 색)에 맞게 복원하세요.", "final");
     renderFinalGrid(true); renderPacket();
   } else {
     S.puzzle = { name: "무작위 색" };
     showPane("stageFive");
     setBrief("이번에는 반대입니다. <b>색을 눈으로 보고</b> 숨겨진 [R, G, B] 숫자를 유추하세요. " +
-             "전송 기회는 <b>5번</b>뿐이며, 전송할 때마다 채널별 근접도를 알려줍니다.");
+             "전송 기회는 <b>5번</b>뿐이며, 전송할 때마다 채널별 근접도를 알려줍니다.",
+             "색을 보고 R·G·B 숫자를 맞춰 전송하세요. 기회는 5번입니다.", "reverse");
     renderReverse();
   }
+  coachShow(true);
   beginRoundTimer(r);
   document.querySelector(".app").scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -3424,6 +3687,7 @@ function answerQuiz(i, wrap, Q) {
   const res = wrap.querySelector(".quiz-res"); res.hidden = false;
   if (i === Q.a) {
     sfx.good();
+    burstAt(btns[i], null, 10); floatAt(btns[i], "+" + QUIZ_BONUS + "점", "score");
     S.quiz.bonus = QUIZ_BONUS;
     res.className = "quiz-res win";
     res.textContent = "정답! +" + QUIZ_BONUS + "점 — " + Q.why;
@@ -3597,6 +3861,14 @@ function showReport() {
     $("nextHint").textContent = isLast ? "최종 결과를 확인합니다." : "다음 단계: " + ROUNDS[S.round + 1].chip;
     $("modalConfirmButton").firstChild.textContent = isLast ? "최종 결과 보기 " : "확인 및 계속 ";
   }
+  /* 등급이 도장처럼 쾅 찍히고(창이 살짝 흔들림), 이어서 별이 하나씩 켜진다 */
+  const gEl2 = $("modalGrade"), md = $("reportModal").querySelector(".modal"), seqR = S.seq;
+  gEl2.classList.remove("slam"); md.classList.remove("shake"); void md.offsetWidth;
+  gEl2.classList.add("slam"); md.classList.add("shake");
+  setTimeout(() => {
+    if (seqR !== S.seq || !$("reportModal").classList.contains("open")) return;
+    sfx.slam(); burstAt(gEl2, [g.c, "#ecfff8"], 12);
+  }, 640);
   openModal($("reportModal"), $("modalConfirmButton"));
 }
 function nextFromReport() {
@@ -3644,6 +3916,7 @@ function showFinal() {
     '<div class="grade-big" style="color:' + g.c + '">' + g.g + '</div></div>' +
     '<div class="score"><span id="finalScore">0</span><span style="font-size:.42em;color:var(--ink-faint)"> / ' +
       MAX_TOTAL.toLocaleString() + '</span></div>' +
+    '<p class="final-stats">복원한 픽셀 <b id="stPx">0</b>개 · 되살린 숫자 <b id="stNum">0</b>개</p>' +
     (isNewBest
       ? '<p style="margin-top:2px;color:var(--amber);font-weight:800">최고 기록 경신! (이전 ' + prevBest.toLocaleString() + '점)</p>'
       : (prevBest ? '<p style="margin-top:2px;color:var(--ink-faint);font-weight:700">최고 기록 ' + prevBest.toLocaleString() + '점</p>' : '')) +
@@ -3693,6 +3966,10 @@ function showFinal() {
   });
 
   animateNumber($("finalScore"), 0, S.score, 1200);
+  animateNumber($("stPx"), 0, S.stats.px, 1100);
+  animateNumber($("stNum"), 0, S.stats.nums, 1400);
+  fireworks(sec, 2800);                 /* 네모 불꽃놀이 */
+  coachSet("win");
   initResolutionLab();
   $("againButton").addEventListener("click", () => { sfx.click(); restartGame(); });
   $("survivalButton").addEventListener("click", () => { sfx.click(); startSurvival(); });
@@ -3769,7 +4046,7 @@ function togglePause() {
 function enterPlay() {
   sfx.init(); sfx.click();
   rain.stop();
-  ["practiceModal", "badgeModal", "workshopModal", "soundModal"].forEach(id => closeIfOpen($(id)));
+  ["modeModal", "practiceModal", "badgeModal", "workshopModal", "soundModal"].forEach(id => closeIfOpen($(id)));
   $("startScreen").hidden = true;
   $("playScreen").style.display = "flex";
   $("finalSlot").innerHTML = "";
@@ -3777,7 +4054,7 @@ function enterPlay() {
 function resetCampaign() {
   S.mode = "campaign";
   S.score = 0; S.results = []; S.paused = false;
-  S.quizRight = 0; S.runBadges = [];
+  S.quizRight = 0; S.runBadges = []; S.stats = { px: 0, nums: 0 };
   $("scoreDisplay").textContent = "0";
   $("finalSlot").innerHTML = "";
 }
@@ -3802,7 +4079,7 @@ function restartCurrent() {
   else restartGame();
 }
 function goHome() {
-  S.seq++; closeStory(); hideClearFx();
+  S.seq++; closeStory(); hideClearFx(); clearHint();
   S.running = false; stopTimer();
   closeModal($("simpleModal")); closeModal($("reportModal"));
   $("playScreen").style.display = "none";
@@ -3836,8 +4113,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ["400", "600", "700", "800", "900"].forEach(w => document.fonts.load(w + ' 16px "A2Z"'));
   }
   applyStageSet(INCLUDE_KERNEL_STAGE);
-  $("startFoot").textContent = "총 " + ROUNDS.length + "단계 · 만점 " + MAX_TOTAL.toLocaleString() +
-    "점 (라운드당 " + ROUND_MAX.toLocaleString() + "점) · 소리는 ‘소리 설정’에서 바꿀 수 있습니다";
+  applyView();
   rain.start();
   /* 오디오는 첫 터치·클릭·키 입력 때 깨운다 — 배경음악을 켜 두었다면 이때 시작 화면 곡이 흐른다 */
   ["pointerdown", "touchend", "keydown"].forEach(t => document.addEventListener(t, () => sfx.init(), { capture: true, passive: true }));
@@ -3894,7 +4170,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     if (e.key === "Escape") {          /* 연습·배지·공방·소리 설정 창은 Esc 로 닫힌다 */
       if ($("soundModal").classList.contains("open")) { e.preventDefault(); closeSound(); return; }
-      const menu = ["practiceModal", "badgeModal", "workshopModal"].map($).find(m => m.classList.contains("open"));
+      const menu = ["modeModal", "practiceModal", "badgeModal", "workshopModal"].map($).find(m => m.classList.contains("open"));
       if (menu) { e.preventDefault(); closeModal(menu); return; }
     }
     if (e.key === "Enter" && e.target.id === "wsInput") { e.preventDefault(); wsSolveStart(); return; }
@@ -3928,11 +4204,28 @@ function loadMeta() {
   const sd = (m.sound && typeof m.sound === "object") ? m.sound : {};
   m.sound = { sfx: sd.sfx !== false, bgm: sd.bgm === true, vol: [1, 2, 3].indexOf(sd.vol) >= 0 ? sd.vol : 2,
               calm: sd.calm === true, vibe: sd.vibe === true };
+  /* 화면 설정 : motion = 움직임 줄이기, big = 글씨 크게.  seen = 안내문을 한 번 펼쳐 보여 준 단계 */
+  const vw = (m.view && typeof m.view === "object") ? m.view : {};
+  m.view = { motion: vw.motion === true, big: vw.big === true };
+  if (!m.seen || typeof m.seen !== "object") m.seen = {};
   return m;
 }
 const META = loadMeta();
 function saveMeta() { try { localStorage.setItem(META_KEY, JSON.stringify(META)); } catch (e) { /* 저장 불가 환경은 무시 */ } }
-const prefersReducedMotion = () => !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+/** 움직임을 줄여야 하나 — 기기의 '동작 줄이기' 또는 설정의 '움직임 줄이기' */
+const prefersReducedMotion = () => !!META.view.motion ||
+  !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+const motionOK = () => !prefersReducedMotion() && typeof Element.prototype.animate === "function";
+/** 화면 설정(움직임 줄이기 · 글씨 크게)을 문서에 반영하고 설정 창 단추 상태를 맞춘다 */
+function applyView() {
+  const root = document.documentElement;
+  root.classList.toggle("calm-motion", !!META.view.motion);
+  root.classList.toggle("big-text", !!META.view.big);
+  document.querySelectorAll("[data-view]").forEach(b => {
+    const kv = b.dataset.view.split(":");
+    b.setAttribute("aria-pressed", String(!!META.view[kv[0]] === (kv[1] === "1")));
+  });
+}
 function closeIfOpen(el) { if (el && el.classList.contains("open")) closeModal(el); }
 
 /* ---- 소리 설정 창 (시작 화면 '소리 설정' · 일시정지 창의 '소리 설정') ---- */
@@ -4140,7 +4433,7 @@ function updateReportStars(intro) {
     if (ROUNDS.every(r => (META.stars[r.kind] || 0) >= 3)) unlockBadge("allstar");
   }
   if (intro || n !== S.starShown) {
-    const from = intro ? 0 : Math.min(S.starShown || 0, n), delay = intro ? 0.45 : 0.15;
+    const from = intro ? 0 : Math.min(S.starShown || 0, n), delay = intro ? 0.85 : 0.15;   /* 처음엔 등급 도장 뒤에 */
     $("modalStars").innerHTML = starPopHtml(n, from, delay) + (res.newStar
       ? '<span class="new" style="animation-delay:' + (delay + Math.max(0, n - from) * 0.28).toFixed(2) + 's">NEW</span>' : "");
     if (n > from) sfx.stars(n, from, delay);
@@ -4399,6 +4692,7 @@ function bossLaugh() {
    23. 단계 연습 — 원하는 단계만 골라 다시 도전하고 별을 모은다
    ========================================================================= */
 function openPractice() {
+  $("practiceStars").textContent = ROUNDS.reduce((a, r) => a + (META.stars[r.kind] || 0), 0) + " / " + ROUNDS.length * 3;
   const list = $("practiceList"); list.innerHTML = "";
   ROUNDS.forEach((r, i) => {
     const best = META.stars[r.kind] || 0;
@@ -4507,6 +4801,32 @@ const SURV_GEN = {
       answer:"1인 자리가 행렬과 똑같은 그림" };
   }
 };
+/* ---- 모드 소개 창 : 시작 화면 카드에는 이름만 두고, 모드에 들어갈 때 설명·기록을 이 창에서 보여 준다 ---- */
+let modeGoAction = null;
+function openModeIntro(cfg) {
+  setSutami($("modeChar"), cfg.char);
+  $("modeTitle").textContent = cfg.title;
+  $("modeDesc").textContent = cfg.desc;
+  const info = $("modeInfo");
+  info.textContent = cfg.info || ""; info.hidden = !cfg.info;
+  info.classList.toggle("lock", !!cfg.locked);
+  modeGoAction = cfg.go || null;
+  $("modeGo").hidden = !cfg.go;
+  $("modeCancel").textContent = cfg.go ? "닫기" : "확인";
+  openModal($("modeModal"), cfg.go ? $("modeGo") : $("modeCancel"));
+}
+function openSurvivalIntro() {
+  const open = survivalUnlocked();
+  if (open) sfx.click(); else sfx.nope();
+  openModeIntro({
+    title: "서바이벌", char: open ? "E14" : "E07", locked: !open,
+    desc: "하트 3개로 오래 버티는 무한 모드예요. 맞힐수록 점수가 쌓이고, 5문제마다 레벨이 올라 점점 어려워집니다. " +
+          "틀리거나 시간이 다 되면 하트가 하나씩 줄어요.",
+    info: open ? (META.survBest ? "최고 기록 " + META.survBest.toLocaleString() + "점" : "아직 기록이 없어요 — 첫 도전!")
+               : "본편 작전을 끝까지 한 번 마치면 열립니다.",
+    go: open ? () => startSurvival() : null
+  });
+}
 function startSurvival() {
   if (!survivalUnlocked()) { sfx.nope(); toast("본편을 한 번 끝까지 마치면 서바이벌이 열립니다.", "info"); return; }
   enterPlay();
@@ -4522,8 +4842,10 @@ function startSurvival() {
   showPane("stageSurvival");
   setRestoreLabel("다음 레벨까지");
   setBrief("하트 <b>3개</b>로 최대한 오래 버티세요. 틀리거나 시간이 다 되면 하트가 하나 줄고, " +
-           "<b>5문제</b>마다 레벨이 올라 문제가 더 어려워집니다.");
+           "<b>5문제</b>마다 레벨이 올라 문제가 더 어려워집니다.",
+           "하트 3개로 오래 버티세요. 5문제마다 레벨이 오릅니다.", "survival");
   renderSurvHud();
+  coachShow(false);                                   /* 서바이벌은 답 상자 안의 수탐이가 반응한다 */
   nextSurvQ();
   document.querySelector(".app").scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -4618,7 +4940,7 @@ function survAnswer(ok, el, why) {
     const gain = 100 * S.surv.level;
     const old = S.score; S.score += gain;
     animateNumber($("scoreDisplay"), old, S.score, 400);
-    if (el) el.classList.add("right");
+    if (el) { el.classList.add("right"); burstAt(el, null, 10); floatAt(el, "+" + gain + "점", "score"); }
     $("survFeedback").innerHTML = '<span class="ok">정답! +' + gain + '점</span>';
     setSurvChar("A01", "pop");               /* O 팻말 */
     const levelUp = S.surv.correct % SURV_PER_LEVEL === 0;
@@ -4922,7 +5244,8 @@ function startCustom(p, fromCode) {
     S.cur = { kind:"binary", chip:"친구 문제", title:"친구 문제 · 흑백 그림", time:60 };
     S.puzzle = { name:"친구의 그림", d: p.d };
     showPane("stageOne");
-    setBrief("친구가 만든 흑백 그림입니다. 왼쪽 행렬에서 값이 <b>1</b>인 칸을 찾아 오른쪽 격자의 <b>같은 자리</b>를 켜세요.");
+    setBrief("친구가 만든 흑백 그림입니다. 왼쪽 행렬에서 값이 <b>1</b>인 칸을 찾아 오른쪽 격자의 <b>같은 자리</b>를 켜세요.",
+             "친구 그림 : 1인 칸을 찾아 같은 자리를 켜세요.", "custom-bin");
     renderBinary();
   } else {
     const bg = bgOf(p.cells), todo = p.cells.filter(v => v !== bg).length;
@@ -4931,11 +5254,13 @@ function startCustom(p, fromCode) {
     S.paint = { cells: p.cells.slice(), bg, done: p.cells.map(v => v === bg), sel: null };
     showPane("stagePaint");
     setBrief("친구가 만든 컬러 그림입니다. R·G·B 세 행렬에서 같은 자리 값을 읽고 알맞은 색을 골라 " +
-             "<b>체크무늬 칸</b>을 칠하세요. 가장 많이 쓰인 배경색은 미리 칠해 두었습니다.");
+             "<b>체크무늬 칸</b>을 칠하세요. 가장 많이 쓰인 배경색은 미리 칠해 두었습니다.",
+             "R·G·B 숫자를 읽고 알맞은 색으로 체크무늬 칸을 칠하세요.", "paint");
     renderPaint();
   }
   $("stageTitle").textContent = S.cur.title;
   renderSteps();
+  coachShow(true);
   startTimer(S.cur.time);
   document.querySelector(".app").scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -4975,19 +5300,21 @@ function onPaintCell(i, b) {
   if (P.done[i]) return;
   if (P.sel === null) { sfx.nope(); toast("먼저 위 팔레트에서 색을 고르세요.", "info"); return; }
   if (P.sel === P.cells[i]) {
-    sfx.good();
+    sfx.good(); coachSet("ok");
     P.done[i] = true;
     b.classList.remove("hole"); b.style.background = PAINT8[P.sel].hex; b.disabled = true;
     b.classList.add("just");
+    burstAt(b, [PAINT8[P.sel].hex, "#ecfff8"], 8);
     b.setAttribute("aria-label", "행 " + (Math.floor(i / 5) + 1) + " 열 " + (i % 5 + 1) + " 칠해짐");
     paintLink(i, false);
     ["pmR", "pmG", "pmB"].forEach(id => { const c = $(id).children[i]; if (c) c.classList.add("done"); });
     updatePaintLeft();
     if (P.done.every(Boolean)) finishRound();
   } else {
-    sfx.bad(); S.misses++;
+    sfx.bad(); S.misses++; coachSet("no");
     b.classList.remove("bad"); void b.offsetWidth; b.classList.add("bad");
     setTimeout(() => b.classList.remove("bad"), 420);
+    hintAt(b, "그 색이 아니에요", "bad"); floatAt(b, penaltyText(), "bad");
     toast("그 색이 아닙니다 — R·G·B 값을 다시 읽어 보세요 (" + missNote() + ")", "bad");
   }
 }
@@ -5001,15 +5328,11 @@ function updatePaintLeft() {
 /* =========================================================================
    26. 시작 화면 갱신 · 새 버튼 연결
    ========================================================================= */
+/* 시작 화면 모드 카드는 한글 이름만 보인다. 별 개수·최고 기록 같은 정보와 설명은 모드에 들어갈 때 뜨는 창에서 보여 준다 */
 function refreshStartScreen() {
-  const got = ROUNDS.reduce((a, r) => a + (META.stars[r.kind] || 0), 0);
-  $("starTotal").textContent = "★ " + got + " / " + ROUNDS.length * 3;
   const open = survivalUnlocked();
   $("survLock").hidden = open;
   $("survivalCard").classList.toggle("locked", !open);
-  $("survCardMeta").textContent = open
-    ? (META.survBest ? "최고 기록 " + META.survBest.toLocaleString() + "점" : "아직 기록 없음 — 첫 도전!")
-    : "본편을 끝까지 한 번 마치면 열립니다";
   $("badgeCount").textContent = BADGES.filter(b => META.badges[b.id]).length + " / " + BADGES.length;
   document.querySelectorAll("[data-story]").forEach(b =>
     b.setAttribute("aria-pressed", String((b.dataset.story === "on") === META.story)));
@@ -5017,7 +5340,11 @@ function refreshStartScreen() {
 function initGameFeatures() {
   $("badgeBtnIcon").innerHTML = pxSvg(BADGES.find(b => b.id === "allstar").px);
   $("practiceCard").addEventListener("click", () => { sfx.init(); sfx.click(); openPractice(); });
-  $("survivalCard").addEventListener("click", () => { sfx.init(); startSurvival(); });
+  $("survivalCard").addEventListener("click", () => { sfx.init(); openSurvivalIntro(); });
+  /* 모드 소개 창 : 시작하기 · 닫기 · 바깥을 누르면 닫힘 */
+  $("modeGo").addEventListener("click", () => { const go = modeGoAction; closeModal($("modeModal")); if (go) go(); });
+  $("modeCancel").addEventListener("click", () => { sfx.click(); closeModal($("modeModal")); });
+  $("modeModal").addEventListener("click", (e) => { if (e.target === $("modeModal")) closeModal($("modeModal")); });
   $("workshopCard").addEventListener("click", () => { sfx.init(); sfx.click(); openWorkshop("make"); });
   $("badgeButton").addEventListener("click", () => { sfx.init(); sfx.click(); openBadges(); });
   document.querySelectorAll("[data-story]").forEach(b => b.addEventListener("click", () => {
@@ -5073,6 +5400,16 @@ function initGameFeatures() {
   }));
   /* 진동은 진동을 지원하는 터치 기기(안드로이드 등)에서만 보인다 — PC 브라우저도 vibrate 를 갖고 있지만 떨 수 없다 */
   $("vibeRow").hidden = !("vibrate" in navigator && window.matchMedia && matchMedia("(any-pointer: coarse)").matches);
+  /* 화면 설정 : 움직임 줄이기 · 글씨 크게 */
+  document.querySelectorAll("[data-view]").forEach(b => b.addEventListener("click", () => {
+    const kv = b.dataset.view.split(":");
+    META.view[kv[0]] = kv[1] === "1"; saveMeta(); applyView(); sfx.init(); sfx.click();
+    if (kv[0] === "motion" && !$("startScreen").hidden) { rain.stop(); rain.start(); }
+  }));
+  applyView();
+  /* 안내문 펼치기·접기, 아래로 스크롤하면 얇아지는 HUD */
+  $("briefToggle").addEventListener("click", () => { sfx.click(); setBriefOpen(!$("briefBox").classList.contains("open")); });
+  bindHudMini();
   $("sndTest").addEventListener("click", () => {
     sfx.init();
     if (!sfx.on()) { sfx.buzz(70); toast("효과음이 꺼져 있습니다 — 위에서 효과음을 켜 주세요.", "info"); return; }
@@ -5084,6 +5421,150 @@ function initGameFeatures() {
   refreshStartScreen();
 }
 document.addEventListener("DOMContentLoaded", initGameFeatures);
+
+/* =========================================================================
+   28. 화면 연출 — 눈앞 피드백(힌트 말풍선 · 점수) · 네모 파편 · 반응하는 작은 수탐이 · 얇아지는 HUD
+   =========================================================================
+   · 파편은 네모. 깜빡임은 1초에 3번 미만. 정답이 맞으면 그 칸은 곧바로 복원된다 — 판의 흐름을 늦추는 연출은 두지 않는다
+     (2026-11-17 : 숫자가 행렬에서 픽셀로 날아가는 연출과 단계마다 나오던 타이틀 카드는 느리고 끊겨 보여서 뺐다).
+   · 설정의 '움직임 줄이기'나 기기의 '동작 줄이기'가 켜져 있으면 motionOK() 가 false — 파편 같은 움직임을 건너뛴다.
+   · 정답을 고르기 '전에' 답을 알려 주는 움직임은 없다.
+   · 연출 조각은 모두 #fxLayer(누르기를 막지 않는 층)에 화면 좌표로 그린다.
+   ========================================================================= */
+const FX_HOT = ["#39ff88", "#00f0ff", "#ffd240", "#ecfff8"];
+const rectOf = (t) => !t ? null : (t.getBoundingClientRect ? t.getBoundingClientRect() : t);
+/** 연출 함수를 감싸서, 오래된 브라우저에서 연출이 실패해도 게임 진행(정답 처리 등)은 멈추지 않게 한다 */
+const safeFx = (fn, fallback) => function () { try { return fn.apply(this, arguments); } catch (e) { return fallback; } };
+/** 연출 조각을 (x, y) 한가운데에 놓는다 */
+function fxPut(el, x, y) {
+  $("fxLayer").appendChild(el);
+  el.style.left = Math.round(x - el.offsetWidth / 2) + "px";
+  el.style.top = Math.round(y - el.offsetHeight / 2) + "px";
+  return el;
+}
+/** 네모 파편이 사방으로 튄다 */
+/* 폭죽처럼 : 처음엔 빠르게 튀어 나갔다가 공기 저항으로 금세 느려지고, 중력 때문에 살짝 포물선을 그리며 떨어진다.
+   밝기는 절반 넘게 그대로 두었다가 마지막에만 작아지며 사라진다(일찍 흐려지면 '푹' 꺼지는 느낌이 난다).
+   실제 궤적을 몇 지점 계산해 키프레임으로 잇는다 — 움직임이 빠른 처음 구간을 촘촘하게.
+   (예전에는 7칸씩 뚝뚝 끊겨 움직여 부자연스러웠다) 조각 크기도 4~8px 로 섞어 덜 기계적으로 보이게 */
+function burstAt(target, colors, n, spread) {
+  const r = rectOf(target); if (!r || !motionOK()) return;
+  const cols = colors || FX_HOT, k = n || 10, sp = spread || 30, x = r.left + r.width / 2, y = r.top + r.height / 2;
+  const T = [0, .03, .07, .12, .19, .28, .4, .55, .72, .86, 1];
+  /* 칸 가운데가 아니라 가장자리에서 튀어 나온다 — 방금 밝아진 칸 위에서 조각이 묻혀 안 보이지 않게 */
+  const hw = Math.min(r.width / 2, 90) * .9, hh = Math.min(r.height / 2, 90) * .9;
+  for (let i = 0; i < k; i++) {
+    const p = document.createElement("i"), s = 4 + randInt(5);
+    p.className = "fx-pt";
+    p.style.cssText = "left:" + x + "px;top:" + y + "px;width:" + s + "px;height:" + s + "px;margin:" + (-s / 2) + "px 0 0 " +
+                      (-s / 2) + "px;background:" + cols[i % cols.length];
+    $("fxLayer").appendChild(p);
+    const life = .38 + Math.random() * .12,                                     /* 초 */
+          a = (i + Math.random() * .6) / k * Math.PI * 2, d = sp * (.8 + Math.random() * .8),
+          ox = Math.cos(a) * hw, oy = Math.sin(a) * hh,
+          drag = 14, vx = Math.cos(a) * d * drag, vy = (Math.sin(a) - .35) * d * drag,   /* 살짝 위로 솟았다가 */
+          g = sp * 8;                                                           /* 떨어진다 */
+    p.animate(T.map(f => {
+      const t = f * life, e = (1 - Math.exp(-drag * t)) / drag;
+      return { offset: f, opacity: f < .55 ? 1 : +(1 - Math.pow((f - .55) / .45, 1.5)).toFixed(2),
+               transform: "translate(" + (ox + vx * e).toFixed(1) + "px," + (oy + vy * e + g * t * t / 2).toFixed(1) + "px) scale(" + (1 - .6 * f * f).toFixed(2) + ")" };
+    }), { duration: Math.round(life * 1000), fill: "forwards" }).onfinish = () => p.remove();
+  }
+}
+/** 점수·복원율 변화가 그 자리에서 떠오른다(+) / 아래로 떨어진다(bad) */
+function floatAt(target, text, kind) {
+  const r = rectOf(target); if (!r || !r.width || !text) return;
+  const f = document.createElement("b"); f.className = "fx-float " + (kind || "good"); f.textContent = text;
+  fxPut(f, r.left + r.width / 2, kind === "bad" ? r.bottom + 10 : r.top - 6);
+  if (!motionOK()) { setTimeout(() => f.remove(), 1000); return; }
+  const dy = kind === "bad" ? 22 : -30;
+  f.animate([{ transform: "translateY(0)", opacity: 0 }, { transform: "translateY(" + Math.round(dy * .3) + "px)", opacity: 1, offset: .2 },
+             { transform: "translateY(" + dy + "px)", opacity: 0 }], { duration: 900, easing: "cubic-bezier(.2,.7,.3,1)", fill: "forwards" })
+    .onfinish = () => f.remove();
+}
+/** 방금 누른 곳 바로 위(위쪽이 HUD 에 가리면 아래)에 짧은 힌트 말풍선 — 한 번에 하나만.
+    같은 내용은 화면 아래 알림(토스트)에도 남아 화면 읽기 프로그램이 읽어 준다 */
+let tipEl = null, tipTimer = null;
+function hintAt(target, text, kind) {
+  const r = rectOf(target); if (!r || !r.width || !text) return;
+  if (tipEl) tipEl.remove();
+  clearTimeout(tipTimer);
+  const t = document.createElement("div");
+  t.className = "fx-tip" + (kind === "info" ? " info" : "");
+  t.textContent = text;
+  $("fxLayer").appendChild(t);
+  const below = r.top - t.offsetHeight - 14 < document.querySelector(".hud").getBoundingClientRect().bottom;
+  t.classList.toggle("below", below);
+  const cx = r.left + r.width / 2, x = clamp(cx, t.offsetWidth / 2 + 8, innerWidth - t.offsetWidth / 2 - 8);
+  t.style.left = Math.round(x) + "px";
+  t.style.top = Math.round(below ? r.bottom + 10 : r.top - 10) + "px";
+  t.style.setProperty("--ax", Math.round(cx - x) + "px");
+  if (motionOK()) t.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150, easing: "ease-out" });
+  tipEl = t;
+  tipTimer = setTimeout(() => { if (tipEl === t) { t.remove(); tipEl = null; } }, 1800);
+}
+function clearHint() { clearTimeout(tipTimer); if (tipEl) { tipEl.remove(); tipEl = null; } }
+/** 이번 오답으로 실제로 깎이는 점수 (감점 한도에 닿았으면 빈 글자 → 아무것도 띄우지 않는다) */
+function penaltyText() {
+  const now = Math.min(PENALTY_CAP, S.misses * PENALTY), before = Math.min(PENALTY_CAP, (S.misses - 1) * PENALTY);
+  return now > before ? "−" + (now - before) + "점" : "";
+}
+/** 숨겨진 숫자가 슬롯처럼 굴러가다 왼쪽부터 하나씩 멈춘다 (역방향 해독의 '해독' 순간) */
+function rollDigits(el, text, ms) {
+  if (!el) return;
+  if (!motionOK()) { el.textContent = text; return; }
+  const t0 = performance.now(), dur = ms || 700;
+  const id = setInterval(() => {
+    const k = (performance.now() - t0) / dur;
+    if (k >= 1 || !document.contains(el)) { clearInterval(id); el.textContent = text; return; }
+    const fixed = Math.floor(k * text.length);
+    el.textContent = text.split("").map((ch, i) => (i < fixed || !/\d/.test(ch)) ? ch : String(randInt(10))).join("");
+  }, 45);
+}
+/** 엔딩 화면의 네모 불꽃놀이 */
+function fireworks(area, ms) {
+  if (!area || !motionOK()) return;
+  const seq = S.seq, end = performance.now() + (ms || 2600);
+  const sets = [["#39ff88", "#ecfff8"], ["#00f0ff", "#ecfff8"], ["#ffd240", "#ff9664"], ["#ff4d6d", "#ffd6de"], ["#c08bff", "#ecfff8"]];
+  (function shoot() {
+    if (performance.now() > end || seq !== S.seq || !document.contains(area)) return;
+    const r = area.getBoundingClientRect(), top = Math.max(r.top, 0), h = Math.min(r.bottom, innerHeight) - top;
+    if (h > 40) burstAt({ left: r.left + r.width * (.12 + Math.random() * .76), top: top + h * (.08 + Math.random() * .4), width: 0, height: 0 },
+                        pickOne(sets), 16, 46);
+    setTimeout(shoot, 260 + randInt(220));
+  })();
+}
+/** 엔딩에 보여 줄 기록 : 복원한 픽셀 수 · 되살린 숫자 수 */
+function addStats(px, nums) { S.stats.px += px; S.stats.nums += nums; }
+
+/* ---- 안내문 옆 작은 수탐이 : 정답이면 깡충 + O, 오답이면 부르르 + X
+        (서바이벌은 답 상자 안에 따로 반응하는 수탐이가 있어 이쪽은 숨긴다) ---- */
+const COACH = { idle: "E02", ok: "E03", no: "E10", win: "E18" };
+let coachTimer = null;
+function coachSet(mode) {
+  const c = $("coach"), img = $("coachImg"); if (!c || c.hidden) return;
+  clearTimeout(coachTimer);
+  c.classList.remove("ok", "no");
+  if (mode !== "ok" && mode !== "no") { setSutami(img, COACH[mode] || COACH.idle); return; }
+  void c.offsetWidth;
+  setSutami(img, COACH[mode]);
+  $("coachSign").textContent = mode === "ok" ? "O" : "X";
+  c.classList.add(mode);
+  coachTimer = setTimeout(() => { c.classList.remove("ok", "no"); setSutami(img, COACH.idle); }, 1300);
+}
+function coachShow(on) { $("coach").hidden = !on; if (on) coachSet("idle"); }
+/* 연출 함수들은 실패해도 조용히 넘어가도록 감싼다 */
+burstAt = safeFx(burstAt); floatAt = safeFx(floatAt); hintAt = safeFx(hintAt); fireworks = safeFx(fireworks);
+
+/* ---- 아래로 스크롤하면 HUD 가 게이지 한 줄로 얇아진다 (오르내릴 때 깜빡이지 않도록 96px 에서 접고 24px 에서 편다) ---- */
+function bindHudMini() {
+  const app = document.querySelector(".app"), hud = document.querySelector(".hud");
+  app.addEventListener("scroll", () => {
+    const y = $("playScreen").style.display === "flex" ? app.scrollTop : 0, mini = hud.classList.contains("mini");
+    const next = mini ? y > 24 : y > 96;
+    if (next !== mini) hud.classList.toggle("mini", next);
+  }, { passive: true });
+}
 
 /* =========================================================================
    27. 수탐이 응용 캐릭터 (표정 E·동작 A) — 파일에 내장한 SVG
@@ -5681,6 +6162,8 @@ window.__PMR__ = { applyStageSet, grayDistractors, FACE_PAL, FACE_GRID, FACE_BG,
                    SUTAMI, SUTAMI_MEDAL, sutamiSvg, sutamiSrc, showSimple,
                    sfx, bgm, SONGS, compileSong, noteNo, listenMatrix, listenReport, listenWs, openSound, closeSound,
                    toggleMuteAll, setSound, togglePause, showReport, finishRound, WS,
+                   coachSet, hintAt, burstAt, floatAt, setBrief, applyView, openSurvivalIntro, openModeIntro,
+                   motionOK, prefersReducedMotion, showFinal,
                    get story(){ return story; } };
 
 })();
