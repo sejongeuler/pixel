@@ -1075,7 +1075,8 @@ html.calm-motion .scanline{display:none}
    시작 화면 단순화 (2026-11-17) — 넓고 반짝이는 '작전 시작' 버튼 · 한글 이름만 남긴 모드 카드 · 모드 소개 창
    (반짝임은 부드럽게 흐르는 반복 연출이라 누르기를 막지 않는다. '움직임 줄이기'면 멈춘다)
    ========================================================================= */
-.start-cta{position:relative;width:min(460px,100%);margin:28px auto 0}
+/* 작전 시작 버튼 · 모드 카드 세 개 · 배지 도감/설정 줄이 모두 카드 안쪽 폭을 똑같이 채워 양끝이 한 줄로 맞는다 */
+.start-cta{position:relative;width:100%;margin:28px auto 0}
 #startButton{position:relative;overflow:hidden;width:100%;padding:19px 30px;font-size:1.3rem;letter-spacing:.02em;
   animation:ctaGlow 2.4s ease-in-out infinite}
 #startButton::after{content:"";position:absolute;top:-20%;bottom:-20%;left:0;width:32%;pointer-events:none;
@@ -1099,12 +1100,20 @@ html.calm-motion .scanline{display:none}
 .start-card .hero-row{gap:clamp(10px,2vw,20px)}
 .start-card .mascot{width:clamp(72px,10vw,118px)}
 .start-card .hero-title{font-size:clamp(1.7rem,5vw,3rem)}
-.mode-cards{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;max-width:640px;margin:22px auto 0}
+.mode-cards{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:22px 0 0}
 .mode-card{display:grid;place-items:center;text-align:center;padding:16px 10px;min-height:62px}
 .mode-card .mc-t{display:inline-flex;align-items:center;gap:9px;font-size:1.06rem;word-break:keep-all}
 .mc-ic{width:20px;height:20px;flex:none}      /* 모드 아이콘 : 5×5 픽셀 그림 (계단 · 하트 · 네 색 픽셀) */
-@media(max-width:520px){.mode-cards{grid-template-columns:1fr}}
+/* 세 칸에 이름이 한 줄로 들어갈 자리가 없으면(칸 하나에 약 170px, 글씨 크게면 181px 필요) 한 줄에 하나씩 쌓는다 */
+@media(max-width:640px){.mode-cards{grid-template-columns:1fr}}
+@media(max-width:680px){html.big-text .mode-cards{grid-template-columns:1fr}}
+/* 배지 도감 · 설정 : 원래 폭(약 2 : 1)에서 출발해 두 버튼이 같은 배율로 늘어나 줄 끝을 맞춘다
+   (원래 폭 기준 + 늘어나는 몫 2 : 1). 글자는 줄바꿈하지 않고, 그래도 자리가 모자라면 버튼째 두 줄로.
+   좁은 휴대폰에서는 안쪽 여백만 줄여 한 줄을 지킨다 */
 .start-sub{margin-top:16px}
+.start-sub .btn{flex:1 1 auto;white-space:nowrap}
+.start-sub #badgeButton{flex-grow:2}
+@media(max-width:420px){.start-sub .btn{padding-left:12px;padding-right:12px}}
 /* 모드 소개 창 : 모드에 들어갈 때 설명 · 기록을 보여 주고 시작한다 */
 .mode-title{font-family:var(--mono);font-size:1.7rem;font-weight:800;color:#fff}
 .mode-desc{margin-top:12px;color:var(--ink-dim);line-height:1.75;font-size:.98rem;word-break:keep-all}
